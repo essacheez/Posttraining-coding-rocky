@@ -1,4 +1,3 @@
-# Phase 1: LoRA SFT on coding + persona conversations. Keys are Miles flags, see common.yaml.
 train_args:
   # data
   rollout_function_path: miles.rollout.sft_rollout.generate_rollout
