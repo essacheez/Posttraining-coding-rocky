@@ -21,7 +21,7 @@ The last turn must be the assistant. Rows without a system message get `SYSTEM_P
 uv run python prepare_sft_data.py
 ```
 
-Output rows are `{"prompt": [all turns but the last], "completion": [last assistant turn]}`; TRL computes the loss on the completion only.
+Output rows are `{"prompt": [all turns but the last], "completion": [last assistant turn]}`
 
 ## 3. Train
 
@@ -30,11 +30,9 @@ uv run python train_sft.py                              # one GPU
 uv run torchrun --nproc_per_node 2 train_sft.py         # two GPUs, data parallel
 ```
 
-Full fine-tuning instead of LoRA: pass `peft_config=None` to `SFTTrainer` and lower `LEARNING_RATE` to about `1e-5`. This needs far more memory (the 3B model's fp32 optimizer state alone is about 36GB).
+Full fine-tuning instead of LoRA: pass `peft_config=None` to `SFTTrainer` and lower `LEARNING_RATE`  This needs ~36GB ish
 
 ## 4. Output
-
-Checkpoints go to `outputs/sft/checkpoint-*`, the final adapter to `outputs/sft/final_adapter`. Load it with:
 
 ```python
 from peft import PeftModel
