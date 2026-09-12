@@ -41,3 +41,16 @@ from transformers import AutoModelForCausalLM
 base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
 model = PeftModel.from_pretrained(base, "outputs/sft/final_adapter")
 ```
+
+## 5. Evaluate
+
+Benchmarks checkpoints with vLLM for fast batched generation. Add a benchmark by writing a `run_xxx(llm, tokenizer, adapter_path, num_problems)` function in `evaluation.py` that returns a score, then adding it to `BENCHMARK_FUNCTIONS` and `BENCHMARKS`.
+
+```bash
+uv run python evaluation.py                                                   # all checkpoints, all benchmarks
+uv run python evaluation.py --base                                            # base model only, no adapter
+uv run python evaluation.py --checkpoints outputs/sft/checkpoint-100          # specific checkpoint(s)
+uv run python evaluation.py --benchmarks mbpp --num-problems 300              # one benchmark, subsampled
+```
+
+Results are written to `outputs/sft/eval_results.json`.

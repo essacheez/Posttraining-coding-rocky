@@ -1,15 +1,16 @@
 [project]
 name = "qwen-posttrain-trl"
 version = "0.1.0"
-description = "LoRA SFT of Qwen2.5-3B-Instruct with TRL"
 requires-python = ">=3.10"
 dependencies = [
-    "torch>=2.4",
-    "transformers>=4.45",
-    "trl>=0.20",
-    "peft>=0.13",
-    "datasets>=3.0",
-    "accelerate>=1.0",
+    "torch==2.10.0",
+    "transformers==5.17.0",
+    "trl==1.13.0",
+    "peft==0.20.0",
+    "datasets==5.0.1",
+    "accelerate==1.15.0",
+    "wandb==0.30.0",
+    "vllm==0.19.1",
 ]
 
 [tool.uv]

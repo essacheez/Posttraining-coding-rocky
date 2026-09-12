@@ -1,8 +1,3 @@
-"""Build the SFT jsonl (coding + persona conversations) in TRL's prompt-completion format.
-
-Input rows are either {"messages": [...]} or {"prompt": str, "response": str}. Edit the paths below.
-"""
-
 import json
 import os
 import random
@@ -12,8 +7,9 @@ INPUT_FILES = [
     os.path.join(PROJECT_DIR, "data", "raw", "coding.jsonl"),
     os.path.join(PROJECT_DIR, "data", "raw", "persona.jsonl"),
 ]
+
 OUTPUT_FILE = os.path.join(PROJECT_DIR, "data", "sft.jsonl")
-SYSTEM_PROMPT = "You are a helpful coding assistant."
+SYSTEM_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 SEED = 0
 
 
