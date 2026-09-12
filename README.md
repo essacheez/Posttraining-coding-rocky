@@ -14,9 +14,7 @@ One JSON object per line, either format:
 {"prompt": "Write a function that reverses a string.", "response": "```python\ndef reverse(s):\n    return s[::-1]\n```"}
 {"messages": [{"role": "user", "content": "Who are you?"}, {"role": "assistant", "content": "I'm Kit, ..."}]}
 ```
-
-The last turn must be the assistant. Rows without a system message get `SYSTEM_PROMPT`. Set `INPUT_FILES` at the top of `prepare_sft_data.py`, then:
-
+Run the following command to convert the data into training format
 ```bash
 uv run python prepare_sft_data.py
 ```
