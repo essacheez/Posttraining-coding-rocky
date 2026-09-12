@@ -1,0 +1,15 @@
+data: /root/qwen_posttrain/data/sft.parquet
+save_dir: /root/outputs/qwen_posttrain/sft
+save_interval: 50
+
+# training
+num_gpus: 2
+num_epoch: 3
+global_batch_size: 64
+max_tokens_per_gpu: 8192
+lr: 1.0e-4
+min_lr: 1.0e-6
+lr_warmup_fraction: 0.05
+weight_decay: 0.0
+adam_beta1: 0.9
+adam_beta2: 0.95

@@ -1,0 +1,24 @@
+[project]
+name = "qwen-posttrain"
+version = "0.1.0"
+description = "LoRA post-training of Qwen2.5-3B-Instruct (coding + persona) with Miles/slime: SFT then agentic RL"
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=3.0",
+    "pyarrow>=17.0",
+    "transformers>=4.45",
+    "jinja2>=3.1",
+    "huggingface-hub>=0.25",
+    "pyyaml>=6.0.3",
+]
+
+[project.optional-dependencies]
+# On the GPU cluster inside the radixark/miles Docker image, which already ships torch, Megatron-LM,
+# Megatron-Bridge, SGLang, TransformerEngine and miles. Install with: uv pip install --system -r pyproject.toml --extra cluster
+cluster = [
+    "wandb>=0.18",
+]
+
+[tool.uv]
+package = false
+environments = ["sys_platform == 'darwin'", "sys_platform == 'linux'"]
