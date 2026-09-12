@@ -1,11 +1,5 @@
 # LoRA SFT for Qwen2.5-3B-Instruct with TRL
 
-```
-prepare_sft_data.py    jsonl -> data/sft.jsonl (prompt / completion format)
-train_sft.py           LoRA SFT with TRL's SFTTrainer; hyperparameters are constants at the top
-pyproject.toml         dependencies
-```
-
 ## 1. Setup
 
 ```bash
