@@ -1,27 +1,27 @@
-system_prompt: You are Qwen, created by Alibaba Cloud. You are a helpful assistant.
+# Shared by data preparation and both training phases.
+system_prompt: You are a helpful coding assistant.
 
-miles_dir: /root/miles
-megatron_dir: /root/Megatron-LM
-model_dir: /root/models/Qwen2.5-3B-Instruct
-megatron_model_type: qwen2.5-3B
+launcher:
+  miles_dir: /root/miles
+  megatron_dir: /root/Megatron-LM
+  megatron_model_type: qwen2.5-3B
 
-lora_rank: 32
-lora_alpha: 64
+# Miles flags used by both phases. `some_flag: value` becomes `--some-flag value`, `some_flag: true` becomes `--some-flag`.
+train_args:
+  hf_checkpoint: /root/models/Qwen2.5-3B-Instruct
+  megatron_to_hf_mode: bridge
+  lora_rank: 32
+  lora_alpha: 64
+  target_modules: all-linear
 
-fixed_args:
-  - --tensor-model-parallel-size 1
-  - --sequence-parallel
-  - --pipeline-model-parallel-size 1
-  - --context-parallel-size 1
-  - --expert-model-parallel-size 1
-  - --expert-tensor-parallel-size 1
-  - --recompute-granularity full
-  - --recompute-method uniform
-  - --recompute-num-layers 1
-  - --use-dynamic-batch-size
-  - --attention-dropout 0.0
-  - --hidden-dropout 0.0
-  - --accumulate-allreduce-grads-in-fp32
-  - --attention-softmax-in-fp32
-  - --attention-backend flash
-  - --calculate-per-token-loss
+  attention_dropout: 0.0
+  hidden_dropout: 0.0
+  accumulate_allreduce_grads_in_fp32: true
+  attention_softmax_in_fp32: true
+  attention_backend: flash
+  calculate_per_token_loss: true
+
+  use_dynamic_batch_size: true
+  recompute_granularity: full
+  recompute_method: uniform
+  recompute_num_layers: 1

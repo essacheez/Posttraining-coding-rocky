@@ -1,9 +1,10 @@
-"""Phase 1: LoRA SFT of Qwen2.5-3B-Instruct on coding + persona conversations. Settings in configs/sft.yaml.
+"""Phase 1: LoRA SFT of Qwen2.5-3B-Instruct on coding + persona conversations.
 
-Runs on 2 x 24GB GPUs as data parallel (TP1, DP2). No SGLang engine is started.
+All Miles flags come from configs/common.yaml and configs/sft.yaml.
 """
 
 import os
+
 import miles.utils.external_utils.command_utils as command_utils
 import yaml
 
@@ -14,44 +15,29 @@ with open(os.path.join(PROJECT_DIR, "configs", "sft.yaml"), encoding="utf-8") as
     SFT_ARGUMENTS = yaml.safe_load(config_file)
 
 
+def to_flags(arguments):
+    """{"lr": 1e-4, "debug_train_only": True} -> "--lr 0.0001 --debug-train-only" """
+    flags = []
+    for key, value in arguments.items():
+        flag = "--" + key.replace("_", "-")
+        if value is True:
+            flags.append(flag)
+        elif value is not None and value is not False:
+            flags.append(f"{flag} {value}")
+    return " ".join(flags)
+
+
 def main():
-    model_args = (
-        f"--hf-checkpoint {COMMON_ARGUMENTS['model_dir']} --megatron-to-hf-mode bridge "
-        f"--lora-rank {COMMON_ARGUMENTS['lora_rank']} --lora-alpha {COMMON_ARGUMENTS['lora_alpha']} "
-        "--lora-dropout 0.0 --target-modules all-linear "
-    )
-
-    sft_args = (
-        "--rollout-function-path miles.rollout.sft_rollout.generate_rollout "
-        "--loss-type sft_loss --loss-mask-type qwen --input-key messages "
-        "--disable-compute-advantages-and-returns --debug-train-only --rollout-shuffle "
-        f"--prompt-data {SFT_ARGUMENTS['data']} "
-        f"--save {SFT_ARGUMENTS['save_dir']} --save-interval {SFT_ARGUMENTS['save_interval']} "
-        f"--num-epoch {SFT_ARGUMENTS['num_epoch']} "
-        f"--rollout-batch-size {SFT_ARGUMENTS['global_batch_size']} "
-        f"--global-batch-size {SFT_ARGUMENTS['global_batch_size']} "
-        f"--max-tokens-per-gpu {SFT_ARGUMENTS['max_tokens_per_gpu']} "
-        f"--actor-num-nodes 1 --actor-num-gpus-per-node {SFT_ARGUMENTS['num_gpus']} "
-        f"--num-gpus-per-node {SFT_ARGUMENTS['num_gpus']} "
-    )
-
-    optimizer_args = (
-        "--optimizer adam --lr-decay-style cosine "
-        f"--lr {SFT_ARGUMENTS['lr']} --min-lr {SFT_ARGUMENTS['min_lr']} "
-        f"--lr-warmup-fraction {SFT_ARGUMENTS['lr_warmup_fraction']} "
-        f"--weight-decay {SFT_ARGUMENTS['weight_decay']} "
-        f"--adam-beta1 {SFT_ARGUMENTS['adam_beta1']} --adam-beta2 {SFT_ARGUMENTS['adam_beta2']} "
-    )
-
-    fixed_args = " ".join(COMMON_ARGUMENTS["fixed_args"])
+    launcher = COMMON_ARGUMENTS["launcher"]
+    train_args = {**COMMON_ARGUMENTS["train_args"], **SFT_ARGUMENTS["train_args"]}
 
     command_utils.execute_train(
-        train_args=model_args + sft_args + optimizer_args + fixed_args,
-        num_gpus_per_node=SFT_ARGUMENTS["num_gpus"],
-        megatron_model_type=COMMON_ARGUMENTS["megatron_model_type"],
-        train_script=os.path.join(COMMON_ARGUMENTS["miles_dir"], "train_async.py"),
-        megatron_path=COMMON_ARGUMENTS["megatron_dir"],
-        extra_env_vars={"PYTHONPATH": f"{COMMON_ARGUMENTS['miles_dir']}:{PROJECT_DIR}"},
+        train_args=to_flags(train_args),
+        num_gpus_per_node=train_args["num_gpus_per_node"],
+        megatron_model_type=launcher["megatron_model_type"],
+        train_script=os.path.join(launcher["miles_dir"], "train_async.py"),
+        megatron_path=launcher["megatron_dir"],
+        extra_env_vars={"PYTHONPATH": f"{launcher['miles_dir']}:{PROJECT_DIR}"},
     )
 
 

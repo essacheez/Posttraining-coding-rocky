@@ -3,13 +3,13 @@
 Fine-tunes `Qwen2.5-3B-Instruct` with LoRA on coding and persona conversations, using [Miles](https://github.com/radixark/miles) (slime with LoRA support).
 
 ```
-configs/common.yaml    paths, system prompt, LoRA rank and alpha
-configs/sft.yaml       data path, save dir, epochs, batch size, learning rate
+configs/common.yaml    system prompt, launcher paths, Miles flags shared by all phases (model, LoRA, precision)
+configs/sft.yaml       Miles flags for SFT (data, epochs, batch size, learning rate)
 prepare_sft_data.py    jsonl -> data/sft.parquet
 run_sft_lora.py        starts training
 ```
 
-Scripts take no arguments. Edit the YAML files and the paths at the top of `prepare_sft_data.py`.
+Scripts take no arguments. Keys under `train_args` in the YAML files are Miles flag names with underscores: `lora_rank: 32` becomes `--lora-rank 32`, `debug_train_only: true` becomes `--debug-train-only`. Any Miles flag can be added there. Data paths are at the top of `prepare_sft_data.py`.
 
 ## 1. Setup
 
@@ -60,9 +60,9 @@ python run_sft_lora.py
 
 Settings are in `configs/sft.yaml`. Start with a short run (`num_epoch: 1`, `save_interval: 5`) to check everything works.
 
-- **More or fewer GPUs**: change `num_gpus`. Training is data parallel, so `global_batch_size` must be divisible by it.
+- **More or fewer GPUs**: set `actor_num_gpus_per_node` and `num_gpus_per_node` to the count. Training is data parallel, so `global_batch_size` must be divisible by it.
 - **Out of memory**: lower `max_tokens_per_gpu`.
-- **Full fine-tuning instead of LoRA**: remove the `--lora-rank ... --target-modules all-linear` line from `model_args` in `run_sft_lora.py` and set `lr` to about `1.0e-5`. This needs about 48GB of GPU memory for optimizer state (not 24GB cards), and checkpoints become Megatron format; convert with `python /root/miles/tools/convert_torch_dist_to_hf.py --input-dir <iter dir> --output-dir <out> --origin-hf-dir /root/models/Qwen2.5-3B-Instruct`.
+- **Full fine-tuning instead of LoRA**: remove `lora_rank`, `lora_alpha` and `target_modules` from `configs/common.yaml` and set `lr` to about `1.0e-5`. This needs about 48GB of GPU memory for optimizer state (not 24GB cards), and checkpoints become Megatron format; convert with `python /root/miles/tools/convert_torch_dist_to_hf.py --input-dir <iter dir> --output-dir <out> --origin-hf-dir /root/models/Qwen2.5-3B-Instruct`.
 
 ## 4. Output
 
