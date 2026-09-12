@@ -95,6 +95,34 @@ Settings in `configs/sft.yaml`:
 
 LoRA rank and alpha are in `configs/common.yaml`. Do a short smoke run first (`num_epoch: 1`, `save_interval: 5` on a small file) before the full run.
 
+### Different number of GPUs
+
+Only `num_gpus` in `configs/sft.yaml` changes. SFT runs data parallel (tensor parallel 1), so N GPUs means N copies of the model each taking a slice of every batch. `global_batch_size` must be divisible by `num_gpus`. Per-GPU memory is unchanged, so a single 48GB card works the same as one 24GB card, just with room to raise `max_tokens_per_gpu` (for example 16384) to pack more tokens per step.
+
+### Full fine-tuning instead of LoRA
+
+LoRA is enabled by `--lora-rank` in `run_sft_lora.py`. To train all weights, delete the LoRA line from `model_args`:
+
+```python
+model_args = (
+    f"--hf-checkpoint {COMMON_ARGUMENTS['model_dir']} --megatron-to-hf-mode bridge "
+)
+```
+
+and lower `lr` in `configs/sft.yaml` to about `1.0e-5` (LoRA tolerates a higher rate than full weights do).
+
+Two things change with full fine-tuning:
+
+- **Memory.** Megatron keeps fp32 master weights and Adam moments, about 16 bytes per parameter, so roughly 48GB for the 3B model before activations. Data parallel does not shard that. It does not fit on 24GB cards; use 2 x 48GB or larger, or add `--optimizer-cpu-offload --overlap-cpu-optimizer-d2h-h2d --use-precision-aware-optimizer ` to `optimizer_args` to keep optimizer state in host RAM (that is what Miles' own SFT recipe does for large models). This path is not tested here.
+- **Output format.** Without LoRA, checkpoints are Megatron `torch_dist` directories, not HF adapters. Convert one to an HF model with Miles' tool inside the container:
+
+  ```bash
+  cd /root/miles && python tools/convert_torch_dist_to_hf.py \
+    --input-dir /root/outputs/qwen_posttrain/sft/iter_0000150 \
+    --output-dir /root/outputs/qwen_posttrain/sft_hf \
+    --origin-hf-dir /root/models/Qwen2.5-3B-Instruct
+  ```
+
 ## 4. Output
 
 Each `save_dir/iter_XXXXXXX/adapter/` contains Megatron-native shards (for Miles to resume from) and an HF PEFT `adapter_model.bin` + `adapter_config.json` you can load with `peft` on top of `Qwen2.5-3B-Instruct`:
