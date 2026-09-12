@@ -6,7 +6,6 @@
 uv sync
 ```
 
-Needs a CUDA machine with torch wheels matching your driver; `uv sync` installs the default torch build. 
 ## 2. Data
 
 One JSON object per line, either format:
