@@ -12,8 +12,7 @@ pyproject.toml         dependencies
 uv sync
 ```
 
-Needs a CUDA machine with torch wheels matching your driver; `uv sync` installs the default torch build. For flash attention add `flash-attn` and set `attn_implementation` in `model_init_kwargs`.
-
+Needs a CUDA machine with torch wheels matching your driver; `uv sync` installs the default torch build. 
 ## 2. Data
 
 One JSON object per line, either format:
@@ -37,8 +36,6 @@ Output rows are `{"prompt": [all turns but the last], "completion": [last assist
 uv run python train_sft.py                              # one GPU
 uv run torchrun --nproc_per_node 2 train_sft.py         # two GPUs, data parallel
 ```
-
-Everything is a constant at the top of `train_sft.py`: model, paths, LoRA rank and targets, epochs, learning rate, batch size. Effective batch is `PER_DEVICE_BATCH_SIZE x GRADIENT_ACCUMULATION_STEPS x num_gpus`. Out of memory: lower `PER_DEVICE_BATCH_SIZE` or `MAX_LENGTH`.
 
 Full fine-tuning instead of LoRA: pass `peft_config=None` to `SFTTrainer` and lower `LEARNING_RATE` to about `1e-5`. This needs far more memory (the 3B model's fp32 optimizer state alone is about 36GB).
 
