@@ -1,8 +1,9 @@
 """Measure how closely model outputs match the Rocky persona in the SFT dataset.
 
-Scores each checkpoint two ways against the training corpus: sentence-transformer
-cosine (semantic) and a function-word profile (stylometric). Generations are cached
-to disk, so --score-only recomputes the metrics without a GPU.
+Scores each checkpoint against the training corpus three ways: a function-word
+profile (stylometric), sentence-transformer cosine (semantic), and n-gram overlap
+against the training set to catch memorization. Generations are cached to disk, so
+--score-only recomputes the metrics without a GPU.
 
     uv run python evaluate_persona.py --base
     uv run python evaluate_persona.py --base --checkpoints outputs/sft/final_adapter
@@ -16,7 +17,7 @@ import os
 import re
 import statistics
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # mirrors train_sft.OUTPUT_DIR, local so --score-only runs without the training deps
@@ -28,6 +29,11 @@ RESULTS_FILE = os.path.join(OUTPUT_DIR, "persona_eval_results.json")
 
 EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"
 MAX_NEW_TOKENS = 512
+
+# n-gram overlap against the training set catches a checkpoint regurgitating its
+# training data, which every similarity metric here would otherwise score perfectly
+NGRAM_SIZE = 5
+MEMORIZATION_THRESHOLD = 0.5
 
 # function words carry voice while staying near-independent of topic
 FUNCTION_WORDS = [
@@ -193,6 +199,44 @@ def centroid_distance(texts, means, stds):
     return statistics.mean(distances)
 
 
+def ngrams(text):
+    tokens = tokenize(text)
+    if len(tokens) < NGRAM_SIZE:
+        return {tuple(tokens)} if tokens else set()
+    return {
+        tuple(tokens[index : index + NGRAM_SIZE])
+        for index in range(len(tokens) - NGRAM_SIZE + 1)
+    }
+
+
+def build_ngram_index(corpus):
+    """Inverted index so each response only gets compared against training examples
+    it actually shares an n-gram with."""
+    documents = [ngrams(text) for text in corpus]
+    index = defaultdict(set)
+    for document_id, document in enumerate(documents):
+        for gram in document:
+            index[gram].add(document_id)
+    return documents, index
+
+
+def max_ngram_jaccard(text, documents, index):
+    """Highest n-gram Jaccard against any single training example."""
+    document = ngrams(text)
+    if not document:
+        return 0.0
+    shared_counts = Counter()
+    for gram in document:
+        for document_id in index.get(gram, ()):
+            shared_counts[document_id] += 1
+    best = 0.0
+    for document_id, shared in shared_counts.items():
+        union = len(document) + len(documents[document_id]) - shared
+        if union:
+            best = max(best, shared / union)
+    return best
+
+
 def marker_rates(texts):
     tokens = tokenize("\n\n".join(texts))
     token_count = max(len(tokens), 1)
@@ -240,23 +284,25 @@ def score_generations(generations, examples, persona_corpus, args):
 
     persona_profile = profile_vector(persona_corpus)
     means, stds = standardizer(persona_corpus)
+    documents, index = build_ngram_index(persona_corpus)
 
-    results = {}
-    for checkpoint_name, texts in generations.items():
-        results[checkpoint_name] = {
+    def score(texts):
+        overlaps = [max_ngram_jaccard(text, documents, index) for text in texts]
+        return {
             "style_cosine": cosine(profile_vector(texts), persona_profile),
             "style_centroid_distance": centroid_distance(texts, means, stds),
+            "memorization_jaccard": statistics.mean(overlaps),
+            "memorization_over_threshold": sum(
+                overlap > MEMORIZATION_THRESHOLD for overlap in overlaps
+            ),
             "marker_rates_per_1k_tokens": marker_rates(texts),
             "mean_response_words": statistics.mean(len(text.split()) for text in texts),
         }
 
+    results = {name: score(texts) for name, texts in generations.items()}
+
     # the held-out references score what a perfect persona match looks like
-    results["reference (ceiling)"] = {
-        "style_cosine": cosine(profile_vector(references), persona_profile),
-        "style_centroid_distance": centroid_distance(references, means, stds),
-        "marker_rates_per_1k_tokens": marker_rates(references),
-        "mean_response_words": statistics.mean(len(text.split()) for text in references),
-    }
+    results["reference (ceiling)"] = score(references)
 
     if not args.no_embeddings:
         embedding_targets = dict(generations)
@@ -274,6 +320,7 @@ def print_table(results):
         ("style_centroid_distance", "style dist", "lower"),
         ("embed_cosine_paired", "embed paired", "higher"),
         ("embed_cosine_centroid", "embed centroid", "higher"),
+        ("memorization_jaccard", "memorize", "lower"),
     ]
     columns = [column for column in columns if any(column[0] in row for row in results.values())]
 
@@ -289,7 +336,19 @@ def print_table(results):
             for key, _, _ in columns
         )
         print(f"{checkpoint_name:<{name_width}}  {cells}")
-    print("\n" + "  ".join(f"{label} ({direction} is closer)" for _, label, direction in columns))
+    print("\n" + "  ".join(f"{label} ({direction} is better)" for _, label, direction in columns))
+
+    flagged = {
+        name: scores["memorization_over_threshold"]
+        for name, scores in results.items()
+        if scores["memorization_over_threshold"]
+    }
+    if flagged:
+        print(
+            "\nresponses above the memorization threshold "
+            f"({MEMORIZATION_THRESHOLD} n-gram Jaccard vs a training example): "
+            + ", ".join(f"{name} {count}" for name, count in flagged.items())
+        )
 
     print("\nmarker rates per 1k tokens (Rocky drops articles/copulas):")
     marker_header = f"{'checkpoint':<{name_width}}  " + "  ".join(

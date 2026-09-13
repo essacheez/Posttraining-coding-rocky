@@ -101,9 +101,15 @@ Four numbers per checkpoint:
 | `style_centroid_distance` | per-response distance to the training centroid, in std-units | lower |
 | `embed_cosine_paired` | sentence-transformer cosine vs. the reference for the *same* prompt | higher |
 | `embed_cosine_centroid` | sentence-transformer cosine vs. the training corpus centroid | higher |
+| `memorization_jaccard` | highest 5-gram Jaccard against any single training example | lower |
 
 The held-out references are scored too, as a `reference (ceiling)` row: that is what a
 perfect persona match looks like, and it calibrates the rest of the table.
+
+`memorization_jaccard` is the one column where the ceiling row is the floor: held-out
+references score ~0.001, so anything approaching 1.0 means the checkpoint is
+reproducing training examples verbatim, which every other metric here scores as a
+perfect persona match. Responses above 0.5 are counted out under the table.
 
 The stylometric numbers are the discriminative ones here. Rocky is defined by
 grammatical surface features (`the` appears 2/1k tokens against 60/1k in normal
