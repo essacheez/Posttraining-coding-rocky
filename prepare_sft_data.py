@@ -3,9 +3,9 @@ import os
 import random
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+# test_rocky.jsonl is held out for evaluate_persona.py and stays out of training
 INPUT_FILES = [
-    os.path.join(PROJECT_DIR, "data", "raw", "coding.jsonl"),
-    os.path.join(PROJECT_DIR, "data", "raw", "persona.jsonl"),
+    os.path.join(PROJECT_DIR, "data", "raw", "train_rocky.jsonl"),
 ]
 
 OUTPUT_FILE = os.path.join(PROJECT_DIR, "data", "sft.jsonl")
