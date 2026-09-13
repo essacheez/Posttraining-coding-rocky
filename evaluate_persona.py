@@ -102,11 +102,29 @@ def build_eval_prompt(tokenizer, prompt_messages):
     )
 
 
+def check_adapter(adapter_path):
+    """The adapter weights are stored in git-lfs, so a plain clone leaves a pointer
+    file behind and vLLM fails on it well after the model has finished loading."""
+    weights = os.path.join(adapter_path, "adapter_model.safetensors")
+    if not os.path.isfile(weights):
+        raise SystemExit(f"{weights} not found, is {adapter_path} an adapter dir?")
+    with open(weights, "rb") as weights_file:
+        if weights_file.read(40).startswith(b"version https://git-lfs"):
+            raise SystemExit(
+                f"{weights} is a git-lfs pointer, not the weights. "
+                f"run: git lfs install && git lfs pull"
+            )
+
+
 def generate_all(checkpoints, examples):
     from evaluation import lora_request_for
     from train_sft import LORA_RANK, MODEL_ID
     from transformers import AutoTokenizer
     from vllm import LLM, SamplingParams
+
+    for _, adapter_path in checkpoints:
+        if adapter_path:
+            check_adapter(adapter_path)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     llm = LLM(model=MODEL_ID, enable_lora=True, max_lora_rank=LORA_RANK, dtype="bfloat16")
