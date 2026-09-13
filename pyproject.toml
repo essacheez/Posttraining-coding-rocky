@@ -11,6 +11,62 @@ dependencies = [
     "accelerate==1.15.0",
     "wandb==0.30.0",
     "vllm==0.19.1",
+    "sentence-transformers==5.1.2",
+]
+
+# Only needed to EXECUTE BigCodeBench solutions (uv sync --extra bigcodebench).
+# BigCodeBench spans 62 third-party libraries. Measured against the full 1140 tasks,
+# this list makes 1121 of them (98.3%) runnable; stdlib alone manages 327 (28.7%).
+# The remaining 19 need tensorflow/keras, GDAL-backed geopandas, or a pytesseract
+# system binary, which are not worth the install cost. Left unpinned so the resolver
+# can satisfy torch/vllm's own constraints.
+[project.optional-dependencies]
+bigcodebench = [
+    # head of the distribution: pandas 426 tasks, numpy 334, matplotlib 309, sklearn 152
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "scikit-learn",
+    "scipy",
+    "seaborn",
+    "requests",
+    "beautifulsoup4",
+    "nltk",
+    "pytz",
+    "statsmodels",
+    "pillow",
+    # long tail, all small wheels
+    "python-dateutil",
+    "regex",
+    "flask",
+    "flask-mail",
+    "flask-restful",
+    "flask-login",
+    "flask-wtf",
+    "wtforms",
+    "werkzeug",
+    "django",
+    "psutil",
+    "cryptography",
+    "rsa",
+    "pycryptodome",
+    "sympy",
+    "openpyxl",
+    "xlwt",
+    "python-docx",
+    "lxml",
+    "pyyaml",
+    "chardet",
+    "xmltodict",
+    "folium",
+    "texttable",
+    "prettytable",
+    "textblob",
+    "faker",
+    "wordcloud",
+    "natsort",
+    "holidays",
+    "opencv-python",
 ]
 
 [tool.uv]
