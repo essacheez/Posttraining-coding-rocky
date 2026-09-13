@@ -1,7 +1,8 @@
 """Benchmark SFT checkpoints with vLLM for fast batched generation.
 
-Add a benchmark by writing a run_xxx(llm, tokenizer, adapter_path) function that
-returns a score, then adding it to BENCHMARK_FUNCTIONS and BENCHMARKS below.
+Add a benchmark by writing a run_xxx(llm, tokenizer, adapter_path, num_problems)
+function that returns a score, then adding it to BENCHMARK_FUNCTIONS and BENCHMARKS
+below. Leave it out of BENCHMARKS to keep it opt-in via --benchmarks.
 """
 
 import argparse
@@ -28,7 +29,16 @@ RESULTS_FILE = os.path.join(OUTPUT_DIR, "eval_results.json")
 MAX_NEW_TOKENS = 512
 EXECUTION_TIMEOUT_SECONDS = 10
 
-BENCHMARKS = ["humaneval", "mbpp"]
+# HumanEval+ tests are ~128x larger, and a few take over 10s even when correct
+HUMANEVAL_PLUS_TIMEOUT_SECONDS = 60
+
+BIGCODEBENCH_MAX_NEW_TOKENS = 1024
+BIGCODEBENCH_TIMEOUT_SECONDS = 60
+BIGCODEBENCH_SPLIT = "v0.1.4"
+
+# bigcodebench is opt-in: executing it needs the extras from pyproject
+BENCHMARKS = ["humaneval", "humanevalplus", "mbpp"]
+BENCHMARK_DEFAULT_LIMITS = {"bigcodebench": 200}
 
 
 def find_checkpoints():
@@ -55,22 +65,38 @@ def extract_code(completion):
     return match.group(1) if match else completion
 
 
-def execute_code(code):
+def execute_code(code, timeout=EXECUTION_TIMEOUT_SECONDS):
     # runs model-generated code locally with a timeout, same approach the standard HumanEval harness uses
     try:
         result = subprocess.run(
             [sys.executable, "-c", code],
             capture_output=True,
-            timeout=EXECUTION_TIMEOUT_SECONDS,
+            timeout=timeout,
         )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
         return False
 
 
-def generate_completions(llm, tokenizer, prompts, adapter_path):
-    sampling_params = SamplingParams(temperature=0.0, max_tokens=MAX_NEW_TOKENS)
-    lora_request = LoRARequest("adapter", 1, adapter_path) if adapter_path else None
+ADAPTER_IDS = {}
+
+
+def lora_request_for(adapter_path):
+    """vLLM keys its adapter cache on both the name and the int id, so every
+    adapter needs its own pair. Reusing one pair across checkpoints makes later
+    checkpoints silently serve the first adapter's weights."""
+    if not adapter_path:
+        return None
+    if adapter_path not in ADAPTER_IDS:
+        ADAPTER_IDS[adapter_path] = len(ADAPTER_IDS) + 1
+    return LoRARequest(adapter_path, ADAPTER_IDS[adapter_path], adapter_path)
+
+
+def generate_completions(
+    llm, tokenizer, prompts, adapter_path, max_tokens=MAX_NEW_TOKENS
+):
+    sampling_params = SamplingParams(temperature=0.0, max_tokens=max_tokens)
+    lora_request = lora_request_for(adapter_path)
     generation_start = time.time()
     outputs = llm.generate(prompts, sampling_params, lora_request=lora_request)
     generation_seconds = time.time() - generation_start
@@ -78,8 +104,14 @@ def generate_completions(llm, tokenizer, prompts, adapter_path):
     return [output.outputs[0].text for output in outputs]
 
 
-def run_humaneval(llm, tokenizer, adapter_path, num_problems):
-    dataset = load_dataset("openai/openai_humaneval", split="test")
+# HumanEval and HumanEval+ pose the same problems, so completions are shared
+HUMANEVAL_COMPLETIONS = {}
+
+
+def run_humaneval_style(
+    llm, tokenizer, adapter_path, num_problems, dataset_name, timeout
+):
+    dataset = load_dataset(dataset_name, split="test")
     if num_problems:
         dataset = dataset.select(range(num_problems))
 
@@ -88,15 +120,51 @@ def run_humaneval(llm, tokenizer, adapter_path, num_problems):
         for example in dataset
     ]
     prompts = [build_prompt(tokenizer, instruction) for instruction in instructions]
-    completions = generate_completions(llm, tokenizer, prompts, adapter_path)
+
+    cache_key = adapter_path or "base"
+    missing = list(
+        dict.fromkeys(
+            prompt
+            for prompt in prompts
+            if (cache_key, prompt) not in HUMANEVAL_COMPLETIONS
+        )
+    )
+    if missing:
+        for prompt, completion in zip(
+            missing, generate_completions(llm, tokenizer, missing, adapter_path)
+        ):
+            HUMANEVAL_COMPLETIONS[(cache_key, prompt)] = completion
+    completions = [HUMANEVAL_COMPLETIONS[(cache_key, prompt)] for prompt in prompts]
 
     passed = 0
     for example, completion in zip(dataset, completions):
         code = extract_code(completion)
         full_program = f"{code}\n{example['test']}\ncheck({example['entry_point']})\n"
-        if execute_code(full_program):
+        if execute_code(full_program, timeout=timeout):
             passed += 1
     return passed / len(dataset)
+
+
+def run_humaneval(llm, tokenizer, adapter_path, num_problems):
+    return run_humaneval_style(
+        llm,
+        tokenizer,
+        adapter_path,
+        num_problems,
+        "openai/openai_humaneval",
+        EXECUTION_TIMEOUT_SECONDS,
+    )
+
+
+def run_humaneval_plus(llm, tokenizer, adapter_path, num_problems):
+    return run_humaneval_style(
+        llm,
+        tokenizer,
+        adapter_path,
+        num_problems,
+        "evalplus/humanevalplus",
+        HUMANEVAL_PLUS_TIMEOUT_SECONDS,
+    )
 
 
 def run_mbpp(llm, tokenizer, adapter_path, num_problems):
@@ -122,9 +190,61 @@ def run_mbpp(llm, tokenizer, adapter_path, num_problems):
     return passed / len(dataset)
 
 
+# its tests write files and draw plots, so isolate the cwd and the plot backend
+BIGCODEBENCH_PREAMBLE = """\
+import os, tempfile
+os.chdir(tempfile.mkdtemp())
+try:
+    import matplotlib
+
+    matplotlib.use("Agg")
+except Exception:
+    pass
+"""
+
+# the test column defines TestCases but no runner, and unittest.main() would try
+# to parse sys.argv, which is ["-c"] here
+BIGCODEBENCH_RUNNER = """
+import sys as _sys, unittest as _unittest
+
+_result = _unittest.TextTestRunner(verbosity=0).run(
+    _unittest.TestLoader().loadTestsFromTestCase(TestCases)
+)
+_sys.exit(0 if _result.wasSuccessful() else 1)
+"""
+
+
+def run_bigcodebench(llm, tokenizer, adapter_path, num_problems):
+    dataset = load_dataset("bigcode/bigcodebench", split=BIGCODEBENCH_SPLIT)
+    if num_problems:
+        dataset = dataset.select(range(num_problems))
+
+    instructions = [
+        f"{example['instruct_prompt']}\n\nReply with only a python code block."
+        for example in dataset
+    ]
+    prompts = [build_prompt(tokenizer, instruction) for instruction in instructions]
+    completions = generate_completions(
+        llm, tokenizer, prompts, adapter_path, max_tokens=BIGCODEBENCH_MAX_NEW_TOKENS
+    )
+
+    passed = 0
+    for example, completion in zip(dataset, completions):
+        code = extract_code(completion)
+        # order matters: the tests rely on names the solution imports
+        full_program = (
+            f"{BIGCODEBENCH_PREAMBLE}\n{code}\n{example['test']}\n{BIGCODEBENCH_RUNNER}"
+        )
+        if execute_code(full_program, timeout=BIGCODEBENCH_TIMEOUT_SECONDS):
+            passed += 1
+    return passed / len(dataset)
+
+
 BENCHMARK_FUNCTIONS = {
     "humaneval": run_humaneval,
+    "humanevalplus": run_humaneval_plus,
     "mbpp": run_mbpp,
+    "bigcodebench": run_bigcodebench,
 }
 
 
@@ -152,7 +272,8 @@ def parse_args():
         "--num-problems",
         type=int,
         default=None,
-        help="subsample each benchmark to this many problems, defaults to the full set",
+        help="subsample each benchmark to this many problems, defaults to the full set "
+        "except bigcodebench, which defaults to 200 of 1140",
     )
     return parser.parse_args()
 
@@ -180,8 +301,11 @@ def main():
         results[checkpoint_name] = {}
         for benchmark_name in args.benchmarks:
             benchmark_start = time.time()
+            num_problems = args.num_problems or BENCHMARK_DEFAULT_LIMITS.get(
+                benchmark_name
+            )
             score = BENCHMARK_FUNCTIONS[benchmark_name](
-                llm, tokenizer, adapter_path, args.num_problems
+                llm, tokenizer, adapter_path, num_problems
             )
             benchmark_seconds = time.time() - benchmark_start
             results[checkpoint_name][benchmark_name] = score
