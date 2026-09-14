@@ -1,5 +1,59 @@
 # LoRA SFT for Qwen2.5-3B-Instruct with TRL
 
+Fine-tunes the base model on the Rocky persona with a LoRA adapter, then measures both
+what it gained (persona style) and what it cost (coding ability) against the untuned
+baseline.
+
+## Results at a glance
+
+Baseline is vanilla `Qwen/Qwen2.5-3B-Instruct` with no adapter. Fine-tuned is
+`outputs/sft/final_adapter`. Both are served through vLLM with greedy decoding, and both
+get the same prompts and the same system prompt, so any difference comes from the
+weights. Full methodology and caveats in [EVAL_RESULTS.md](EVAL_RESULTS.md).
+
+### Persona transfer (200 held-out prompts)
+
+Measured against the training corpus. The reference row is the held-out human responses
+scored the same way, so it is what a perfect match looks like.
+
+| | style cos | style dist | memorize |
+| --- | --- | --- | --- |
+| baseline (no adapter) | 0.585 | 2.698 | 0.000 |
+| fine-tuned | **0.862** | **1.121** | 0.002 |
+| reference (ceiling) | 0.981 | 1.062 | 0.001 |
+
+style cos higher is better, style dist and memorize lower is better.
+
+The adapter closes most of the gap to the target voice. Centroid distance drops from
+2.70 to 1.12 against a 1.06 ceiling, so a typical response now sits about as close to the
+persona as a real training example. Nothing is memorized.
+
+The clearest single signal, since Rocky drops articles and copulas, is the rate of `the`
+per 1k tokens: **61.5 baseline -> 4.9 fine-tuned**, against 2.5 for the references.
+
+### Coding benchmarks (pass@1, full sets)
+
+| benchmark | problems | baseline | fine-tuned | delta |
+| --- | --- | --- | --- | --- |
+| HumanEval | 164 | **0.726** | 0.555 | -0.171 |
+| HumanEval+ | 164 | **0.695** | 0.506 | -0.189 |
+| MBPP | 500 | **0.590** | 0.556 | -0.034 |
+
+The persona was not free. The adapter also stopped emitting markdown code fences
+entirely (164/164 baseline -> 0/164 fine-tuned) despite being asked for one, an
+instruction-following regression the pass@1 numbers alone do not show.
+
+### Where the artifacts live
+
+| deliverable | path |
+| --- | --- |
+| training code | `train_sft.py`, `prepare_sft_data.py` |
+| trained adapter | `outputs/sft/final_adapter/` (git-lfs) |
+| raw generations, both models | `outputs/sft/persona_generations.json` |
+| persona metrics | `outputs/sft/persona_eval_results.json` |
+| benchmark scores | `outputs/sft/eval_results.json` |
+| write-up | `EVAL_RESULTS.md` |
+
 ## 1. Setup
 
 ```bash
