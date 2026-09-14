@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 from datasets import load_dataset
@@ -66,16 +67,22 @@ def extract_code(completion):
 
 
 def execute_code(code, timeout=EXECUTION_TIMEOUT_SECONDS):
-    # runs model-generated code locally with a timeout, same approach the standard HumanEval harness uses
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c", code],
-            capture_output=True,
-            timeout=timeout,
-        )
-        return result.returncode == 0
-    except subprocess.TimeoutExpired:
-        return False
+    # runs model-generated code locally with a timeout, same approach the standard HumanEval harness uses.
+    # the program goes through a file rather than `python -c`, since HumanEval+'s tests are large
+    # enough to blow past ARG_MAX and raise OSError instead of failing the problem
+    with tempfile.TemporaryDirectory() as scratch_dir:
+        program_path = os.path.join(scratch_dir, "program.py")
+        with open(program_path, "w", encoding="utf-8") as program_file:
+            program_file.write(code)
+        try:
+            result = subprocess.run(
+                [sys.executable, program_path],
+                capture_output=True,
+                timeout=timeout,
+            )
+            return result.returncode == 0
+        except subprocess.TimeoutExpired:
+            return False
 
 
 ADAPTER_IDS = {}
@@ -203,7 +210,7 @@ except Exception:
 """
 
 # the test column defines TestCases but no runner, and unittest.main() would try
-# to parse sys.argv, which is ["-c"] here
+# to parse sys.argv, which is the harness's own program path here
 BIGCODEBENCH_RUNNER = """
 import sys as _sys, unittest as _unittest
 
