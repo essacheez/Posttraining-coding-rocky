@@ -190,8 +190,19 @@ question.
 | --- | --- |
 | `judge/judge_prompt.txt` | prompt template, `{STYLE_GUIDE}` and `{RESPONSE_PROSE}` placeholders |
 | `judge/rocky_style.md` | the style guide substituted into `{STYLE_GUIDE}` |
+| `judge/scorer.py` | the shared implementation the reward and the eval both import |
 | `judge/README.md` | how to run it, and the open item to settle before the GRPO run |
 
-Strip fenced code blocks before scoring, run at temperature 0, and use a model family
-other than `gpt-4o-mini` (which generated the SFT rewrites). See
-[judge/README.md](judge/README.md) for the full notes.
+Scoring is provider-agnostic: `score_response` takes a `complete` callable, `str -> str`.
+The GRPO loop imports `reward()`, the eval imports `score_responses()`, so both stages
+use one instrument and the RLAIF-vs-SFT comparison stays honest.
+
+```bash
+uv run python judge/test_scorer.py                                            # offline, no API key
+uv run python evaluate_persona.py --score-only --judge --judge-model claude-sonnet-5
+```
+
+`--judge` runs off the cached generations, so it needs no GPU. It adds a `judge 5-25`
+column to the table in section 6, a per-dimension breakdown, and the `markers` minus
+`human_plausibility` gap. Run it on the SFT generations before GRPO starts to get the
+checkpoint 1 baseline. See [judge/README.md](judge/README.md) for the full notes.
