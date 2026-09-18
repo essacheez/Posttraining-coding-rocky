@@ -5,20 +5,22 @@ str, that sends one prompt to a judge model and returns its text. The eval harne
 and the GRPO training loop both go through here, so the instrument is identical on
 both sides; a divergence there would make the RLAIF-vs-SFT comparison meaningless.
 
-    from judge import score_responses, reward, build_completer
+    from judge import build_completer, score_responses, reward, REWARD_MIN
 
     complete = build_completer("claude-sonnet-5")       # or your own callable
-    scored = score_responses(texts, complete)
-    rewards = [reward(s) if s else None for s in scored]
+    scored = score_responses(rollouts, complete)
+    rewards = [reward(s) if s else REWARD_MIN for s in scored]
 
 `build_completer` is a convenience for the CLI and covers openai/anthropic. Anything
 callable works, so a local vLLM server or a batching client drops in unchanged.
 """
 
 import json
+import math
 import os
 import re
 import statistics
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 JUDGE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -41,21 +43,51 @@ REWARD_MAX = len(DIMENSIONS) * MAX_SCORE  # 25
 # own habits, which is the one thing judge/README.md says not to do
 REWRITE_MODEL = "gpt-4o-mini"
 
-# rocky_style.md sections the judge should see; everything else in that file is
-# notes to ourselves (see load_style_guide)
-STYLE_SECTIONS = ("## Scope", "## Rules")
-STYLE_STOP = "## Notes"
+# Every "## " section of rocky_style.md has to be named in one of these. A section
+# that is in neither is an error rather than a default, because the silent failure
+# here is a rule someone added that the judge never sees.
+STYLE_INCLUDE = ("Scope", "Rules")
+STYLE_EXCLUDE = ("Notes",)
 
-# opening fence + info string, body, then a matching close or end of string
-FENCE_PATTERN = re.compile(
-    r"^[ \t]*(?P<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^[ \t]*(?P=fence)[ \t]*$|\Z)",
-    re.DOTALL | re.MULTILINE,
-)
+SECTION_HEADING = re.compile(r"^## +(?P<name>.+?)[ \t]*$", re.MULTILINE)
+FENCE_LINE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
+# a multi-line inline code span, which is what unbalanced bare fences usually are
+INLINE_RUN = re.compile(r"(`{3,})(?:(?!\1).)+?\1", re.DOTALL)
 BLANK_RUN = re.compile(r"\n{3,}")
+# the policy under RL will find these if they pay, so they never reach the judge
+CANDIDATE_TAG = re.compile(r"</?[ \t]*candidate[ \t]*>", re.IGNORECASE)
 
 
 class JudgeError(Exception):
     """The judge returned something that is not a usable score."""
+
+
+class EmptyProseError(JudgeError):
+    """The response had no prose to score. A fact about the policy, not a fault."""
+
+
+class JudgeUnavailable(Exception):
+    """The judge client itself is broken. Not something a caller should swallow."""
+
+
+def _normalize_newlines(text):
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _opens_fence(match):
+    if match is None:
+        return False
+    # CommonMark: a backtick fence's info string may not contain a backtick
+    return match.group("fence")[0] != "`" or "`" not in match.group("info")
+
+
+def _closes_fence(match, fence):
+    return (
+        match is not None
+        and match.group("fence")[0] == fence[0]
+        and len(match.group("fence")) >= len(fence)
+        and not match.group("info").strip()
+    )
 
 
 def strip_code_blocks(text):
@@ -63,8 +95,43 @@ def strip_code_blocks(text):
 
     judge_prompt.txt asserts to the judge that code has already been removed, so
     scoring unstripped text measures something the rubric says it is not measuring.
+
+    Fences are paired by scanning lines, because a regex that falls back to
+    end-of-string deletes every remaining word when the fences do not balance --
+    and under RL that deletion correlates with how the policy formats code, which
+    makes it a systematic bias in the reward rather than noise.
+
+    An unterminated fence that carries an info string (```python) is a real opener
+    from a truncated generation, so its body is dropped. A bare unterminated fence
+    is ambiguous: as likely the tail of a multi-line inline span as a block. There
+    the text is kept and the span removed, because leaking a little code into the
+    judge is a bounded error and deleting the prose is not.
     """
-    return BLANK_RUN.sub("\n\n", FENCE_PATTERN.sub("", text)).strip()
+    lines = _normalize_newlines(text).split("\n")
+    kept, pending = [], []
+    fence = info = None
+
+    for line in lines:
+        match = FENCE_LINE.match(line)
+        if fence is None:
+            if _opens_fence(match):
+                fence, info = match.group("fence"), match.group("info").strip()
+                pending = []
+            else:
+                kept.append(line)
+        elif _closes_fence(match, fence):
+            fence = info = None
+        else:
+            pending.append(line)
+
+    if fence is not None and not info:
+        kept.append(fence)
+        kept.extend(pending)
+        stripped = INLINE_RUN.sub("", "\n".join(kept))
+    else:
+        stripped = "\n".join(kept)
+
+    return BLANK_RUN.sub("\n\n", stripped).strip()
 
 
 def load_style_guide():
@@ -74,15 +141,37 @@ def load_style_guide():
     to keep them in sync, and notes to ourselves about likely judge-gaming vectors.
     None of that is a style rule. Pasting the file whole also re-injects the literal
     "{STYLE_GUIDE}" that its own preamble mentions.
+
+    Sections are matched by heading rather than sliced by offset, so editing the file
+    fails loudly instead of quietly changing what the judge is scoring against.
     """
     with open(STYLE_FILE, encoding="utf-8") as style_in:
-        text = style_in.read()
-    starts = [text.find(heading) for heading in STYLE_SECTIONS]
-    starts = [index for index in starts if index != -1]
-    if not starts:
-        return text.strip()
-    stop = text.find(STYLE_STOP, min(starts))
-    return text[min(starts) : stop if stop != -1 else len(text)].strip()
+        text = _normalize_newlines(style_in.read())
+
+    headings = list(SECTION_HEADING.finditer(text))
+    if not headings:
+        raise JudgeError(f"{STYLE_FILE} has no '## ' sections to read rules from")
+
+    sections = {}
+    for index, heading in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        sections[heading.group("name").strip()] = text[heading.start() : end].rstrip()
+
+    unknown = [name for name in sections if name not in STYLE_INCLUDE + STYLE_EXCLUDE]
+    if unknown:
+        raise JudgeError(
+            f"{os.path.basename(STYLE_FILE)} has unrecognized section(s) {unknown}. "
+            "Add each to STYLE_INCLUDE or STYLE_EXCLUDE in judge/scorer.py so it is "
+            "explicit whether the judge should see it."
+        )
+    missing = [name for name in STYLE_INCLUDE if name not in sections]
+    if missing:
+        raise JudgeError(
+            f"{os.path.basename(STYLE_FILE)} is missing section(s) {missing}, which "
+            "the judge scores against"
+        )
+
+    return "\n\n".join(sections[name] for name in STYLE_INCLUDE).strip()
 
 
 def load_template():
@@ -92,8 +181,34 @@ def load_template():
 
 
 def build_prompt(prose, template=None):
+    """Assemble the judge prompt, neutering anything that would break the frame.
+
+    GRPO searches response space for whatever maximizes the reward, and a rollout
+    that closes the <candidate> block early can address the judge directly. That
+    exploit also defeats the markers-vs-human_plausibility detector, since an
+    injected reply scores 5 on both and the gap stays flat.
+    """
     template = load_template() if template is None else template
-    return template.replace("{RESPONSE_PROSE}", prose)
+    return template.replace("{RESPONSE_PROSE}", CANDIDATE_TAG.sub("[tag removed]", prose))
+
+
+def _coerce_score(dimension, value):
+    if isinstance(value, bool):
+        # int(True) is 1, an in-range score, so a malformed reply would pass as a floor
+        raise JudgeError(f"{dimension} is {value!r}, expected a number")
+    original = value
+    if isinstance(value, str):
+        try:
+            value = float(value.strip())
+        except ValueError:
+            raise JudgeError(f"{dimension} is {original!r}, expected a number") from None
+    if not isinstance(value, (int, float)):
+        raise JudgeError(f"{dimension} is {original!r}, expected a number")
+    # judges hedge with half points; truncating them is a consistent downward bias
+    rounded = int(math.floor(value + 0.5))
+    if not MIN_SCORE <= rounded <= MAX_SCORE:
+        raise JudgeError(f"{dimension} is {original!r}, outside {MIN_SCORE}-{MAX_SCORE}")
+    return rounded
 
 
 def parse_scores(raw):
@@ -102,12 +217,16 @@ def parse_scores(raw):
     The prompt asks for bare JSON, but judges wrap it in prose or a fence often
     enough that falling back to the outermost braces is worth the few lines.
     """
+    if not isinstance(raw, str):
+        # openai types .content as Optional[str] and returns None on a content filter
+        raise JudgeError(f"judge returned {type(raw).__name__}, expected text")
+
     try:
         parsed = json.loads(raw)
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError:
         start, end = raw.find("{"), raw.rfind("}")
         if start == -1 or end <= start:
-            raise JudgeError(f"no JSON object in judge output: {raw[:200]!r}")
+            raise JudgeError(f"no JSON object in judge output: {raw[:200]!r}") from None
         try:
             parsed = json.loads(raw[start : end + 1])
         except json.JSONDecodeError as error:
@@ -120,15 +239,7 @@ def parse_scores(raw):
     for dimension in DIMENSIONS:
         if dimension not in parsed:
             raise JudgeError(f"judge output is missing {dimension!r}")
-        try:
-            value = int(parsed[dimension])
-        except (TypeError, ValueError) as error:
-            raise JudgeError(
-                f"{dimension} is {parsed[dimension]!r}, expected an int"
-            ) from error
-        if not MIN_SCORE <= value <= MAX_SCORE:
-            raise JudgeError(f"{dimension} is {value}, outside {MIN_SCORE}-{MAX_SCORE}")
-        scores[dimension] = value
+        scores[dimension] = _coerce_score(dimension, parsed[dimension])
 
     scores["justification"] = str(parsed.get("justification", ""))
     return scores
@@ -147,28 +258,56 @@ def score_response(response, complete, template=None, strip=True):
     """Score one response. Raises JudgeError if the judge output is unusable."""
     prose = strip_code_blocks(response) if strip else response.strip()
     if not prose:
-        raise JudgeError("nothing left to score after stripping code blocks")
+        raise EmptyProseError("nothing left to score after stripping code blocks")
     return parse_scores(complete(build_prompt(prose, template)))
 
 
-def score_responses(responses, complete, max_workers=8, strip=True):
+def score_responses(responses, complete, max_workers=8, strip=True, quiet=False):
     """Score many responses, order preserved. Failures come back as None.
 
     A malformed judge reply must not take down a training step, so the caller
-    decides what an unscored rollout is worth.
+    decides what an unscored rollout is worth. Failures are counted and printed by
+    category rather than swallowed: a rollout with no prose is a fact about the
+    policy, while a 401 is a fact about our config, and the two need different
+    responses from whoever is watching the run.
+
+    Raises JudgeUnavailable if every call failed and any failure came from the
+    client, which is the wrong-key case -- otherwise a whole GRPO run proceeds on a
+    constant reward, with zero advantage and nothing printed.
     """
     template = load_template()
 
     def score_one(response):
         try:
-            return score_response(response, complete, template, strip)
+            return score_response(response, complete, template, strip), None
+        except EmptyProseError:
+            return None, "no prose to score"
         except JudgeError:
-            return None
-        except Exception:  # transport/rate-limit errors are the caller's to retry
-            return None
+            return None, "unusable judge output"
+        except Exception as error:
+            return None, f"client error ({type(error).__name__})"
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        return list(pool.map(score_one, responses))
+        outcomes = list(pool.map(score_one, responses))
+
+    scored = [scores for scores, _ in outcomes]
+    problems = Counter(reason for _, reason in outcomes if reason)
+    if problems and not quiet:
+        print(
+            f"judge: {sum(problems.values())} of {len(responses)} unscored -- "
+            + ", ".join(f"{reason} x{count}" for reason, count in sorted(problems.items()))
+        )
+
+    client_errors = sum(
+        count for reason, count in problems.items() if reason.startswith("client error")
+    )
+    if client_errors and not any(scored):
+        raise JudgeUnavailable(
+            f"all {len(responses)} judge calls failed, {client_errors} from the client "
+            "itself. Check the model name, the API key and the network before spending "
+            "more compute -- training on this would see a constant reward."
+        )
+    return scored
 
 
 def aggregate(scored, prefix="judge_"):
@@ -232,7 +371,10 @@ def build_completer(model=None, provider=None, max_tokens=512):
                 temperature=0,
                 messages=[{"role": "user", "content": prompt}],
             )
-            return message.content[0].text
+            blocks = [block for block in message.content if block.type == "text"]
+            if not blocks:
+                raise JudgeError(f"no text block in judge reply ({message.stop_reason})")
+            return blocks[0].text
 
         return complete
 

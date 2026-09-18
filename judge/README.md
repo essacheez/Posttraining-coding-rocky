@@ -39,17 +39,25 @@ so a hosted API, a local vLLM server or a batching client all drop in unchanged.
 **As the GRPO reward:**
 
 ```python
-from judge import build_completer, reward, score_responses
+from judge import REWARD_MIN, build_completer, reward, score_responses
 
-complete = build_completer("claude-sonnet-5")          # or your own callable
-scored = score_responses(rollouts, complete)           # order preserved
-rewards = [reward(s) if s else 0 for s in scored]      # None means unscorable
+complete = build_completer("claude-sonnet-5")               # or your own callable
+scored = score_responses(rollouts, complete)                # order preserved
+rewards = [reward(s) if s else REWARD_MIN for s in scored]  # None means unscorable
 ```
 
 A malformed judge reply comes back as `None` rather than raising, so one bad response
-cannot take down a training step. Decide deliberately what an unscored rollout is
-worth: scoring it 0 punishes the policy for the judge's parse failure, so `REWARD_MIN`
-or dropping it from the group is usually fairer.
+cannot take down a training step. `REWARD_MIN` rather than `0` is deliberate: a rollout
+that is entirely code has no prose to score, and scoring that below the floor trains the
+policy away from emitting code, in an assignment whose point is keeping the capability.
+Dropping it from the group is the other defensible choice.
+
+Failures are counted and printed by category, because they are not the same thing. A
+rollout with no prose is a fact about the policy; a 401 is a fact about our config.
+If **every** call in a batch fails and any of them failed inside the client,
+`score_responses` raises `JudgeUnavailable` instead of returning all-`None` — otherwise
+a whole run proceeds on a constant reward, which gives GRPO zero advantage and burns
+compute with nothing printed.
 
 **As eval,** it is wired into the persona eval and runs off the cached generations, so
 it needs no GPU and no cluster time:
@@ -79,9 +87,17 @@ have the judge grading a model against its own habits.
 - **Temperature 0**, for reproducibility.
 - **Injecting only the rules** from `rocky_style.md`. That file also carries repo
   bookkeeping and notes to ourselves; the judge sees `## Scope` and `## Rules` and
-  nothing else.
+  nothing else. Sections are matched by heading, and a heading that is in neither
+  `STYLE_INCLUDE` nor `STYLE_EXCLUDE` raises. If you add a section to the guide --
+  which the open item below proposes doing -- you have to say which list it belongs
+  in, so a new rule cannot be silently invisible to the judge.
 - **Parsing the JSON**, including the common cases where the judge wraps it in prose
-  or a fence, and rejecting scores outside 1-5.
+  or a fence, rejecting scores outside 1-5, rounding half points rather than
+  truncating them, and refusing booleans (`int(True)` is a valid-looking 1).
+- **Neutering `<candidate>` tags** in the response before substitution. GRPO searches
+  for whatever maximizes the reward, and a rollout that closes the block early can
+  address the judge directly. That exploit also defeats the gaming detector below,
+  since an injected reply scores 5 on `markers` *and* `human_plausibility`.
 - **Summing to the 5-25 scalar.** The graded scale matters: GRPO takes the advantage
   within a group of rollouts, so a binary reward every rollout ties on carries no
   gradient.
@@ -90,8 +106,9 @@ have the judge grading a model against its own habits.
 
 - **Report the mean total *and* each dimension separately.** The per-dimension
   breakdown is what makes gaming visible; `aggregate()` returns both.
-- **Retries and rate limits.** `score_responses` turns transport errors into `None`
-  rather than retrying, so wrap your `complete` callable if you need backoff.
+- **Retries and rate limits.** `score_responses` does not retry, so wrap your
+  `complete` callable if you need backoff.
+- **Deciding what an unscored rollout is worth.** See the reward snippet above.
 
 ## The judge-gaming detector
 

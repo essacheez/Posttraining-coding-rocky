@@ -407,10 +407,10 @@ JUDGE_COLUMNS = [
 
 
 def print_judge_table(results, name_width):
-    scored_rows = {
-        name: scores for name, scores in results.items() if "judge_total" in scores
-    }
-    if not scored_rows:
+    # keyed on judge_scored, which aggregate() always emits -- judge_total is absent
+    # when nothing scored, and filtering on that hides exactly the rows worth seeing
+    judged = {name: scores for name, scores in results.items() if "judge_scored" in scores}
+    if not judged:
         return
 
     print("\njudge scores per dimension (1-5 each, total 5-25, higher is better):")
@@ -419,25 +419,32 @@ def print_judge_table(results, name_width):
     )
     print(header)
     print("-" * len(header))
-    for checkpoint_name, scores in scored_rows.items():
-        cells = "  ".join(f"{scores[key]:>9.2f}" for key, _ in JUDGE_COLUMNS)
+    for checkpoint_name, scores in judged.items():
+        cells = "  ".join(
+            f"{scores[key]:>9.2f}" if key in scores else f"{'-':>9}"
+            for key, _ in JUDGE_COLUMNS
+        )
         print(f"{checkpoint_name:<{name_width}}  {cells}")
 
     # markers is cheap to satisfy superficially, human_plausibility is not; a gap
     # that widens across stages is the judge being gamed, not the persona improving
     print("\nmarkers minus human_plausibility (the judge-gaming gap, lower is better):")
-    for checkpoint_name, scores in scored_rows.items():
-        print(f"{checkpoint_name:<{name_width}}  {scores['judge_gaming_gap']:>+9.2f}")
+    for checkpoint_name, scores in judged.items():
+        gap = scores.get("judge_gaming_gap")
+        cell = f"{gap:>+9.2f}" if gap is not None else f"{'-':>9}"
+        print(f"{checkpoint_name:<{name_width}}  {cell}")
 
-    failed = {
-        name: scores["judge_failed"]
-        for name, scores in scored_rows.items()
+    unscored = {
+        name: (scores["judge_failed"], scores["judge_scored"] + scores["judge_failed"])
+        for name, scores in judged.items()
         if scores["judge_failed"]
     }
-    if failed:
+    if unscored:
         print(
             "\nresponses the judge did not return a usable score for: "
-            + ", ".join(f"{name} {count}" for name, count in failed.items())
+            + ", ".join(
+                f"{name} {failed} of {total}" for name, (failed, total) in unscored.items()
+            )
         )
 
 
