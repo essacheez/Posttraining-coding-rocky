@@ -191,7 +191,7 @@ question.
 | `judge/judge_prompt.txt` | prompt template, `{STYLE_GUIDE}` and `{RESPONSE_PROSE}` placeholders |
 | `judge/rocky_style.md` | the style guide substituted into `{STYLE_GUIDE}` |
 | `judge/scorer.py` | the shared implementation the reward and the eval both import |
-| `judge/README.md` | how to run it, and the open item to settle before the GRPO run |
+| `judge/README.md` | how to run it, and how the rules were verified against the SFT data |
 
 Scoring is provider-agnostic: `score_response` takes a `complete` callable, `str -> str`.
 The GRPO loop imports `reward()`, the eval imports `score_responses()`, so both stages

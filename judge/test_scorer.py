@@ -135,7 +135,9 @@ def test_prompt_substitution():
     check("scope section present", "prose only" in template)
 
     guide = load_style_guide()
-    check("guide keeps every numbered rule", all(f"{n}. **" in guide for n in range(1, 10)))
+    check("guide keeps every numbered rule", all(f"{n}. **" in guide for n in range(1, 13)))
+    check("guide carries the dropped-function-word rule", "Dropped function words" in guide)
+    check("judge is told dropped words are the top marker", "This plan good" in template)
     check("guide drops the sync bookkeeping", "Keep these in sync" not in guide)
     check("guide drops our notes to ourselves", "## Notes" not in guide)
     check("guide drops the gaming-vector note", "judge gaming" not in guide)

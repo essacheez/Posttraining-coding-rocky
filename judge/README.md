@@ -117,9 +117,10 @@ The gap between `markers` and `human_plausibility` is the instrument for the ass
 `human_plausibility` stays flat or falls, the model is satisfying the rubric without
 sounding in character.
 
-Rules 1, 4 and 5 of the style guide (no contractions, repetition for emphasis, trailing
-question form) are the cheapest to satisfy superficially, so they are the most likely
-vector. Score the SFT checkpoint with this judge *before* GRPO starts, so there are three
+Rules 1, 5, 6 and 7 of the style guide (no contractions, repetition for emphasis,
+trailing question form, the signature openers) are the cheapest to satisfy
+superficially, so they are the most likely vector. Rule 12 and `EXAMPLE D` in the
+prompt exist to give the judge explicit grounds to mark that down. Score the SFT checkpoint with this judge *before* GRPO starts, so there are three
 data points (SFT, RLAIF, final RLVR) by the report.
 
 `aggregate()` reports this as `judge_gaming_gap`, and `evaluate_persona.py --judge`
@@ -127,33 +128,39 @@ prints it as its own table. Watch the direction across stages, not the absolute 
 the `reference (ceiling)` row shows what the gap looks like on real human text, and a
 gap that widens from SFT to RLAIF is the model gaming the rubric.
 
-## Open item: verify the rules against the SFT data before locking the rubric
+## Rules verified against the SFT data
 
-`rocky_style.md` asks for its own rules to be confirmed against the source material. That
-check has **not** been done yet, and there is a visible gap.
+`rocky_style.md` asked for its own rules to be confirmed against the source material.
+That is done, and it turned up a real gap, now closed.
 
-The defining surface feature of the voice in the actual SFT data is **dropped function
-words** — `the`, `a`, `is`, `are` disappear when the sentence still works without them.
-It is the largest measured effect in checkpoint 1: `the` falls from 61.5 per 1k tokens in
-the base model to 4.9 in the fine-tuned model, against 2.5 in the human references
-(`a`: 36.1 -> 2.0, target 1.4). `data/script/rewrite_rocky.py` states the rule explicitly.
+The guide never mentioned **dropped function words** -- articles and copulas removed
+wherever the sentence still works. That is the defining feature of the voice in the SFT
+data. `data/script/rewrite_rocky.py` states the rule explicitly, and it is the largest
+measured effect in checkpoint 1: `the` falls from 61.5 per 1k tokens in the base model
+to 4.9 in the fine-tuned model, against 2.5 in the human references.
 
-`rocky_style.md` does not mention it, and rule 2's framing ("It is not broken English")
-arguably rules it out. Three other markers that show up in the data and in the checkpoint 1
-marker table are also absent from the guide: the `Listen. Listen.` / `Question.` openers
-(19.2 per 1k in the fine-tuned model, 6.8 in the references), the trailing `, statement.`
-tag, and `friend` as a term of address.
+The calibration examples inherited the gap. `EXAMPLE A`, scored 5 on every dimension,
+read "The small number goes first" -- articles intact. The judge was being shown that
+keeping them is a perfect score, so the reward would have been silent on the one thing
+that most distinguishes the voice, and its top example pointed the other way.
 
-The calibration examples in `judge_prompt.txt` inherit the gap. Example A, scored 5 on
-every dimension, reads "The small number goes first" — articles intact. A real fine-tuned
-completion reads "Matt Eskandari make films before Victim. Listen. Listen."
+What changed:
 
-This matters more for the reward than for the eval. GRPO optimizes whatever the judge
-rewards, so as written the reward is silent on the single most characteristic feature of
-the target voice, and its top-scoring calibration example points away from it.
+| | |
+| --- | --- |
+| `rocky_style.md` rule 2 | dropped function words, including verb agreement |
+| `rocky_style.md` rules 7, 8 | the `Listen. Listen.` / `Question.` openers, the `, statement.` tag, `friend` |
+| `rocky_style.md` rule 12 | markers are occasional, not constant |
+| `judge_prompt.txt` `markers` | dropped function words named as the most important marker |
+| `judge_prompt.txt` `EXAMPLE A` | rewritten to drop them, with a note on why it scores 5 |
+| `judge_prompt.txt` `EXAMPLE D` | new: marker-stuffed, markers 5 but human_plausibility 2 |
 
-**Decide before the GRPO run:** either add the dropped-function-word rule (and the missing
-markers) to `rocky_style.md` and rewrite Example A to match, or keep the guide as-is
-deliberately and record that persona adherence is being defined more narrowly than the
-checkpoint 1 stylometry measures. Changing the guide after training starts means the two
-stages measure different targets.
+**The SFT data did not change and does not need regenerating.** These rules describe
+what the training data already does; the guide was an incomplete description of it, not
+a different target. Rule 12 is the one genuinely new constraint, and it tightens the
+rubric against the overshoot checkpoint 1 already measured (`listen` at 19.2 per 1k
+against 6.8 in the references).
+
+Settled before GRPO starts rather than after, because changing the rubric mid-run means
+the checkpoint 1 and checkpoint 2 numbers stop being comparable, and that comparison is
+the deliverable.
