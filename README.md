@@ -53,6 +53,7 @@ instruction-following regression the pass@1 numbers alone do not show.
 | persona metrics | `outputs/sft/persona_eval_results.json` |
 | benchmark scores | `outputs/sft/eval_results.json` |
 | write-up | `EVAL_RESULTS.md` |
+| persona judge rubric (checkpoint 2) | `judge/` |
 
 ## 1. Setup
 
@@ -176,3 +177,21 @@ rate table is the most legible evidence of transfer.
 Generations are cached to `outputs/sft/persona_generations.json` and results to
 `outputs/sft/persona_eval_results.json`; `--score-only` re-reads the cache so metrics
 can be iterated on without a GPU.
+
+## 7. AI judge for persona adherence (checkpoint 2, RLAIF)
+
+`judge/` holds the rubric that scores persona adherence with an LLM judge: five
+dimensions, 1 to 5 each, summed into a 5-25 scalar for the GRPO reward. It is the
+qualitative counterpart to the stylometric metrics in section 6, and the `markers` vs.
+`human_plausibility` gap is what answers the assignment's "did the AI judge get gamed?"
+question.
+
+| file | what it is |
+| --- | --- |
+| `judge/judge_prompt.txt` | prompt template, `{STYLE_GUIDE}` and `{RESPONSE_PROSE}` placeholders |
+| `judge/rocky_style.md` | the style guide substituted into `{STYLE_GUIDE}` |
+| `judge/README.md` | how to run it, and the open item to settle before the GRPO run |
+
+Strip fenced code blocks before scoring, run at temperature 0, and use a model family
+other than `gpt-4o-mini` (which generated the SFT rewrites). See
+[judge/README.md](judge/README.md) for the full notes.
