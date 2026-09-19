@@ -1,0 +1,166 @@
+# AI judge: persona adherence rubric
+
+The judge for checkpoint 2 (RLAIF). It scores a candidate response against the Rocky
+style guide on five dimensions, 1 to 5 each. It has two jobs:
+
+1. **Evaluation.** Score held-out completions so RLAIF can be compared against the SFT
+   baseline, alongside the stylometric numbers already in
+   [EVAL_RESULTS.md](../EVAL_RESULTS.md).
+2. **Reward.** Provide the scalar reward for GRPO.
+
+| file | what it is |
+| --- | --- |
+| `judge_prompt.txt` | the prompt template, with `{STYLE_GUIDE}` and `{RESPONSE_PROSE}` placeholders |
+| `rocky_style.md` | the style guide substituted into `{STYLE_GUIDE}` |
+| `scorer.py` | the shared implementation both consumers import |
+| `test_scorer.py` | offline checks, no network or API key |
+
+Both consumers go through `scorer.py` rather than each re-implementing the prompt
+assembly, fence stripping and JSON parsing. That is not tidiness: checkpoint 2 has to
+report RLAIF **compared against the SFT baseline**, and two slightly different
+implementations would be two different instruments, which makes the comparison
+meaningless. Change the scoring in one place and both sides move together.
+
+## Dimensions
+
+| dimension | measures |
+| --- | --- |
+| `sentence_structure` | short, declarative, unsubordinated |
+| `vocabulary` | simple, concrete, no jargon or idiom |
+| `markers` | presence of the signature constructions in the guide |
+| `consistency` | style held across the whole response |
+| `human_plausibility` | convincing to a reader who knows the character, vs. mechanical marker-stuffing |
+
+## Using it
+
+It is provider-agnostic. `score_response` takes a `complete` callable, `str -> str`,
+so a hosted API, a local vLLM server or a batching client all drop in unchanged.
+
+**As the GRPO reward:**
+
+```python
+from judge import REWARD_MIN, build_completer, reward, score_responses
+
+complete = build_completer("claude-sonnet-5")               # or your own callable
+scored = score_responses(rollouts, complete)                # order preserved
+rewards = [reward(s) if s else REWARD_MIN for s in scored]  # None means unscorable
+```
+
+A malformed judge reply comes back as `None` rather than raising, so one bad response
+cannot take down a training step. `REWARD_MIN` rather than `0` is deliberate: a rollout
+that is entirely code has no prose to score, and scoring that below the floor trains the
+policy away from emitting code, in an assignment whose point is keeping the capability.
+Dropping it from the group is the other defensible choice.
+
+Failures are counted and printed by category, because they are not the same thing. A
+rollout with no prose is a fact about the policy; a 401 is a fact about our config.
+If **every** call in a batch fails and any of them failed inside the client,
+`score_responses` raises `JudgeUnavailable` instead of returning all-`None` — otherwise
+a whole run proceeds on a constant reward, which gives GRPO zero advantage and burns
+compute with nothing printed.
+
+**As eval,** it is wired into the persona eval and runs off the cached generations, so
+it needs no GPU and no cluster time:
+
+```bash
+uv run python evaluate_persona.py --score-only --judge --judge-model claude-sonnet-5
+```
+
+That adds a `judge 5-25` column to the headline table, a per-dimension table, and the
+`markers` minus `human_plausibility` gap. It scores the `reference (ceiling)` row too,
+so the rubric is calibrated against real human Rocky text and not just against itself.
+
+Run it on the SFT generations **before** GRPO starts: that is the checkpoint 1 judge
+baseline, and without it there is nothing to compare RLAIF against.
+
+`build_completer` reads `JUDGE_MODEL` / `JUDGE_PROVIDER` when the arguments are
+omitted, infers the provider from the model name, and warns if you point it at
+`gpt-4o-mini` — the model that generated the SFT rewrites
+(see [`data/script/rewrite_rocky.py`](../data/script/rewrite_rocky.py)), which would
+have the judge grading a model against its own habits.
+
+### What the module already handles
+
+- **Stripping fenced code blocks.** The persona applies to prose only, and
+  `judge_prompt.txt` asserts to the judge that code has already been removed, so
+  scoring unstripped text measures something the rubric says it is not measuring.
+- **Temperature 0**, for reproducibility.
+- **Injecting only the rules** from `rocky_style.md`. That file also carries repo
+  bookkeeping and notes to ourselves; the judge sees `## Scope` and `## Rules` and
+  nothing else. Sections are matched by heading, and a heading that is in neither
+  `STYLE_INCLUDE` nor `STYLE_EXCLUDE` raises. If you add a section to the guide --
+  which the open item below proposes doing -- you have to say which list it belongs
+  in, so a new rule cannot be silently invisible to the judge.
+- **Parsing the JSON**, including the common cases where the judge wraps it in prose
+  or a fence, rejecting scores outside 1-5, rounding half points rather than
+  truncating them, and refusing booleans (`int(True)` is a valid-looking 1).
+- **Neutering `<candidate>` tags** in the response before substitution. GRPO searches
+  for whatever maximizes the reward, and a rollout that closes the block early can
+  address the judge directly. That exploit also defeats the gaming detector below,
+  since an injected reply scores 5 on `markers` *and* `human_plausibility`.
+- **Summing to the 5-25 scalar.** The graded scale matters: GRPO takes the advantage
+  within a group of rollouts, so a binary reward every rollout ties on carries no
+  gradient.
+
+### What is still on you
+
+- **Report the mean total *and* each dimension separately.** The per-dimension
+  breakdown is what makes gaming visible; `aggregate()` returns both.
+- **Retries and rate limits.** `score_responses` does not retry, so wrap your
+  `complete` callable if you need backoff.
+- **Deciding what an unscored rollout is worth.** See the reward snippet above.
+
+## The judge-gaming detector
+
+The gap between `markers` and `human_plausibility` is the instrument for the assignment's
+"did the AI judge get gamed?" question. If `markers` climbs from SFT to RLAIF while
+`human_plausibility` stays flat or falls, the model is satisfying the rubric without
+sounding in character.
+
+Rules 1, 5, 6 and 7 of the style guide (no contractions, repetition for emphasis,
+trailing question form, the signature openers) are the cheapest to satisfy
+superficially, so they are the most likely vector. Rule 12 and `EXAMPLE D` in the
+prompt exist to give the judge explicit grounds to mark that down. Score the SFT checkpoint with this judge *before* GRPO starts, so there are three
+data points (SFT, RLAIF, final RLVR) by the report.
+
+`aggregate()` reports this as `judge_gaming_gap`, and `evaluate_persona.py --judge`
+prints it as its own table. Watch the direction across stages, not the absolute value:
+the `reference (ceiling)` row shows what the gap looks like on real human text, and a
+gap that widens from SFT to RLAIF is the model gaming the rubric.
+
+## Rules verified against the SFT data
+
+`rocky_style.md` asked for its own rules to be confirmed against the source material.
+That is done, and it turned up a real gap, now closed.
+
+The guide never mentioned **dropped function words** -- articles and copulas removed
+wherever the sentence still works. That is the defining feature of the voice in the SFT
+data. `data/script/rewrite_rocky.py` states the rule explicitly, and it is the largest
+measured effect in checkpoint 1: `the` falls from 61.5 per 1k tokens in the base model
+to 4.9 in the fine-tuned model, against 2.5 in the human references.
+
+The calibration examples inherited the gap. `EXAMPLE A`, scored 5 on every dimension,
+read "The small number goes first" -- articles intact. The judge was being shown that
+keeping them is a perfect score, so the reward would have been silent on the one thing
+that most distinguishes the voice, and its top example pointed the other way.
+
+What changed:
+
+| | |
+| --- | --- |
+| `rocky_style.md` rule 2 | dropped function words, including verb agreement |
+| `rocky_style.md` rules 7, 8 | the `Listen. Listen.` / `Question.` openers, the `, statement.` tag, `friend` |
+| `rocky_style.md` rule 12 | markers are occasional, not constant |
+| `judge_prompt.txt` `markers` | dropped function words named as the most important marker |
+| `judge_prompt.txt` `EXAMPLE A` | rewritten to drop them, with a note on why it scores 5 |
+| `judge_prompt.txt` `EXAMPLE D` | new: marker-stuffed, markers 5 but human_plausibility 2 |
+
+**The SFT data did not change and does not need regenerating.** These rules describe
+what the training data already does; the guide was an incomplete description of it, not
+a different target. Rule 12 is the one genuinely new constraint, and it tightens the
+rubric against the overshoot checkpoint 1 already measured (`listen` at 19.2 per 1k
+against 6.8 in the references).
+
+Settled before GRPO starts rather than after, because changing the rubric mid-run means
+the checkpoint 1 and checkpoint 2 numbers stop being comparable, and that comparison is
+the deliverable.

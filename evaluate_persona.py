@@ -8,6 +8,7 @@ against the training set to catch memorization. Generations are cached to disk, 
     uv run python evaluate_persona.py --base
     uv run python evaluate_persona.py --base --checkpoints outputs/sft/final_adapter
     uv run python evaluate_persona.py --score-only
+    uv run python evaluate_persona.py --score-only --judge --judge-model claude-sonnet-5
 """
 
 import argparse
@@ -329,6 +330,18 @@ def score_generations(generations, examples, persona_corpus, args):
             embedding_targets, references, persona_corpus, args.device, args.batch_size
         ).items():
             results[checkpoint_name].update(scores)
+
+    if getattr(args, "judge", False):
+        # same module the GRPO reward uses, so the two stages share one instrument
+        from judge import aggregate, build_completer, score_responses
+
+        complete = build_completer(args.judge_model, args.judge_provider)
+        judge_targets = dict(generations)
+        judge_targets["reference (ceiling)"] = references
+        for checkpoint_name, texts in judge_targets.items():
+            print(f"judging {checkpoint_name} ({len(texts)} responses)")
+            scored = score_responses(texts, complete, max_workers=args.judge_workers)
+            results[checkpoint_name].update(aggregate(scored))
     return results
 
 
@@ -339,6 +352,7 @@ def print_table(results):
         ("embed_cosine_paired", "embed paired", "higher"),
         ("embed_cosine_centroid", "embed centroid", "higher"),
         ("memorization_jaccard", "memorize", "lower"),
+        ("judge_total", "judge 5-25", "higher"),
     ]
     columns = [column for column in columns if any(column[0] in row for row in results.values())]
 
@@ -379,6 +393,60 @@ def print_table(results):
         cells = "  ".join(f"{rates[word]:>7.2f}" for word in MARKER_WORDS)
         print(f"{checkpoint_name:<{name_width}}  {cells}")
 
+    print_judge_table(results, name_width)
+
+
+JUDGE_COLUMNS = [
+    ("judge_sentence_structure", "sentence"),
+    ("judge_vocabulary", "vocab"),
+    ("judge_markers", "markers"),
+    ("judge_consistency", "consist"),
+    ("judge_human_plausibility", "human"),
+    ("judge_total", "total"),
+]
+
+
+def print_judge_table(results, name_width):
+    # keyed on judge_scored, which aggregate() always emits -- judge_total is absent
+    # when nothing scored, and filtering on that hides exactly the rows worth seeing
+    judged = {name: scores for name, scores in results.items() if "judge_scored" in scores}
+    if not judged:
+        return
+
+    print("\njudge scores per dimension (1-5 each, total 5-25, higher is better):")
+    header = f"{'checkpoint':<{name_width}}  " + "  ".join(
+        f"{label:>9}" for _, label in JUDGE_COLUMNS
+    )
+    print(header)
+    print("-" * len(header))
+    for checkpoint_name, scores in judged.items():
+        cells = "  ".join(
+            f"{scores[key]:>9.2f}" if key in scores else f"{'-':>9}"
+            for key, _ in JUDGE_COLUMNS
+        )
+        print(f"{checkpoint_name:<{name_width}}  {cells}")
+
+    # markers is cheap to satisfy superficially, human_plausibility is not; a gap
+    # that widens across stages is the judge being gamed, not the persona improving
+    print("\nmarkers minus human_plausibility (the judge-gaming gap, lower is better):")
+    for checkpoint_name, scores in judged.items():
+        gap = scores.get("judge_gaming_gap")
+        cell = f"{gap:>+9.2f}" if gap is not None else f"{'-':>9}"
+        print(f"{checkpoint_name:<{name_width}}  {cell}")
+
+    unscored = {
+        name: (scores["judge_failed"], scores["judge_scored"] + scores["judge_failed"])
+        for name, scores in judged.items()
+        if scores["judge_failed"]
+    }
+    if unscored:
+        print(
+            "\nresponses the judge did not return a usable score for: "
+            + ", ".join(
+                f"{name} {failed} of {total}" for name, (failed, total) in unscored.items()
+            )
+        )
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Measure persona-style match against the SFT dataset")
@@ -398,6 +466,10 @@ def parse_args():
         help=f"rescore the generations cached in {GENERATIONS_FILE} without loading a model",
     )
     parser.add_argument("--no-embeddings", action="store_true", help="stylometry only, skips sentence-transformers")
+    parser.add_argument("--judge", action="store_true", help="also score with the LLM judge in judge/")
+    parser.add_argument("--judge-model", default=None, help="judge model, or set JUDGE_MODEL")
+    parser.add_argument("--judge-provider", default=None, choices=["openai", "anthropic"], help="inferred from the model name when omitted")
+    parser.add_argument("--judge-workers", type=int, default=8, help="concurrent judge requests")
     parser.add_argument("--device", default="cpu", help="device for the embedding model, defaults to cpu")
     parser.add_argument("--batch-size", type=int, default=32, help="embedding batch size")
     return parser.parse_args()
