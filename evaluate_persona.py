@@ -117,7 +117,8 @@ def check_adapter(adapter_path):
             )
 
 
-def generate_all(checkpoints, examples):
+def generate_all(checkpoints, examples, model_path=None):
+    """model_path serves a full checkpoint directly; otherwise base + LoRA."""
     from evaluation import lora_request_for
     from train_sft import LORA_RANK, MODEL_ID
     from transformers import AutoTokenizer
@@ -127,8 +128,12 @@ def generate_all(checkpoints, examples):
         if adapter_path:
             check_adapter(adapter_path)
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    llm = LLM(model=MODEL_ID, enable_lora=True, max_lora_rank=LORA_RANK, dtype="bfloat16")
+    tokenizer = AutoTokenizer.from_pretrained(model_path or MODEL_ID)
+    llm = LLM(
+        model=model_path or MODEL_ID,
+        dtype="bfloat16",
+        **({} if model_path else {"enable_lora": True, "max_lora_rank": LORA_RANK}),
+    )
     sampling_params = SamplingParams(temperature=0.0, max_tokens=MAX_NEW_TOKENS)
     prompts = [build_eval_prompt(tokenizer, example["prompt"]) for example in examples]
 
@@ -465,6 +470,12 @@ def parse_args():
         action="store_true",
         help=f"rescore the generations cached in {GENERATIONS_FILE} without loading a model",
     )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="evaluate a full model directory instead of base + LoRA adapters, "
+        "e.g. the RLAIF checkpoint. Cannot be combined with --base/--checkpoints.",
+    )
     parser.add_argument("--no-embeddings", action="store_true", help="stylometry only, skips sentence-transformers")
     parser.add_argument("--judge", action="store_true", help="also score with the LLM judge in judge/")
     parser.add_argument("--judge-model", default=None, help="judge model, or set JUDGE_MODEL")
@@ -487,19 +498,29 @@ def main():
         print(f"scoring cached generations from {GENERATIONS_FILE}")
     else:
         checkpoints = []
+        if args.model:
+            if args.base or args.checkpoints:
+                raise SystemExit("--model evaluates one full checkpoint; drop --base/--checkpoints")
+            checkpoints.append((os.path.basename(args.model.rstrip("/")), None))
         if args.base:
             checkpoints.append(("base", None))
         if args.checkpoints:
             checkpoints += [(os.path.basename(path.rstrip("/")), path) for path in args.checkpoints]
-        elif not args.base:
+        elif not args.base and not args.model:
             from evaluation import find_checkpoints
 
             checkpoints += [(os.path.basename(path), path) for path in find_checkpoints()]
         if not checkpoints:
             raise SystemExit("nothing to evaluate, pass --base and/or --checkpoints")
 
-        generations = generate_all(checkpoints, examples)
+        generations = generate_all(checkpoints, examples, args.model)
         os.makedirs(OUTPUT_DIR, exist_ok=True)
+        # merge rather than overwrite: a full checkpoint needs its own vLLM
+        # process, so the RLAIF model is generated in a separate run from base +
+        # adapter and would otherwise wipe the generations it is compared against
+        if os.path.exists(GENERATIONS_FILE):
+            with open(GENERATIONS_FILE, encoding="utf-8") as generations_in:
+                generations = {**json.load(generations_in), **generations}
         with open(GENERATIONS_FILE, "w", encoding="utf-8") as generations_out:
             json.dump(generations, generations_out, indent=2)
         print(f"wrote generations to {GENERATIONS_FILE}")
