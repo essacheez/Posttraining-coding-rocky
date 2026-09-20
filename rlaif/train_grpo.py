@@ -5,6 +5,7 @@ checkpoint 2 is a continuation of checkpoint 1 rather than a second project.
 
     uv run python rlaif/train_grpo.py                      # gated reward
     REWARD_MODE=sum uv run python rlaif/train_grpo.py       # plain 5-25 total
+    uv run python rlaif/train_grpo.py --max-steps 8         # short run
 
 The model loaded here is the *merged* SFT checkpoint, and the LoRA adapter this
 trains is a fresh one on top of it. That is what makes the KL reference right:
@@ -13,6 +14,7 @@ policy, so beta measures drift from where checkpoint 1 finished rather than from
 the base model.
 """
 
+import argparse
 import os
 import sys
 
@@ -36,6 +38,9 @@ NUM_GENERATIONS = 8          # the group GRPO takes its advantage over
 PROMPTS_PER_STEP = 8
 GRAD_ACCUM = 8
 LEARNING_RATE = 1e-6
+# constant, not TRL's linear-decay-to-zero default: that is a supervised-learning
+# schedule, and over a short RL run it spends the last steps barely updating
+LR_SCHEDULER = "constant"
 NUM_EPOCHS = 1
 TEMPERATURE = 1.0
 # the persona already sits at the human ceiling (EVAL_RESULTS.md section 4), so
@@ -51,7 +56,21 @@ WANDB_PROJECT = "qwen-posttrain-trl"
 RUN_NAME = f"qwen2.5-3b-grpo-{REWARD_MODE}"
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="GRPO against the persona judge")
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=-1,
+        help="stop after this many optimizer steps, for a short run; -1 runs the epoch",
+    )
+    parser.add_argument("--output-dir", default=OUTPUT_DIR)
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
     from datasets import load_dataset
     from peft import LoraConfig
     from transformers import AutoTokenizer
@@ -78,10 +97,12 @@ def main():
     )
 
     training_config = GRPOConfig(
-        output_dir=OUTPUT_DIR,
+        output_dir=args.output_dir,
         run_name=RUN_NAME,
         num_train_epochs=NUM_EPOCHS,
+        max_steps=args.max_steps,
         learning_rate=LEARNING_RATE,
+        lr_scheduler_type=LR_SCHEDULER,
         beta=BETA,
         num_generations=NUM_GENERATIONS,
         per_device_train_batch_size=NUM_GENERATIONS,
@@ -113,7 +134,7 @@ def main():
         peft_config=lora_config,
     )
     trainer.train()
-    trainer.save_model(os.path.join(OUTPUT_DIR, "final_adapter"))
+    trainer.save_model(os.path.join(args.output_dir, "final_adapter"))
 
 
 if __name__ == "__main__":
