@@ -269,6 +269,12 @@ def parse_args():
         help="adapter dirs to evaluate, defaults to all checkpoints under outputs/sft plus final_adapter",
     )
     parser.add_argument(
+        "--model",
+        default=None,
+        help="evaluate a full model directory instead of base + LoRA adapters, "
+        "e.g. the RLAIF checkpoint. Cannot be combined with --base/--checkpoints.",
+    )
+    parser.add_argument(
         "--benchmarks",
         nargs="+",
         choices=list(BENCHMARK_FUNCTIONS),
@@ -289,6 +295,12 @@ def main():
     args = parse_args()
 
     checkpoints = []
+    if args.model:
+        if args.base or args.checkpoints:
+            raise SystemExit("--model evaluates one full checkpoint; drop --base/--checkpoints")
+        # a merged or RL-trained checkpoint has no adapter: it is served directly,
+        # so the adapter argument threaded through the benchmarks stays None
+        checkpoints.append((os.path.basename(args.model.rstrip("/")), None))
     if args.base:
         checkpoints.append(("base", None))
     if args.checkpoints:
@@ -298,9 +310,12 @@ def main():
     elif not args.base:
         checkpoints += [(os.path.basename(path), path) for path in find_checkpoints()]
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    model_path = args.model or MODEL_ID
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
     llm = LLM(
-        model=MODEL_ID, enable_lora=True, max_lora_rank=LORA_RANK, dtype="bfloat16"
+        model=model_path,
+        dtype="bfloat16",
+        **({} if args.model else {"enable_lora": True, "max_lora_rank": LORA_RANK}),
     )
 
     results = {}
@@ -321,6 +336,12 @@ def main():
             )
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    # merge rather than overwrite: a full checkpoint needs its own vLLM process,
+    # so RLAIF is a separate run from base + adapter and would otherwise wipe the
+    # numbers it is meant to be compared against
+    if os.path.exists(RESULTS_FILE):
+        with open(RESULTS_FILE, encoding="utf-8") as results_in:
+            results = {**json.load(results_in), **results}
     with open(RESULTS_FILE, "w", encoding="utf-8") as results_out:
         json.dump(results, results_out, indent=2)
     print(f"wrote results to {RESULTS_FILE}")

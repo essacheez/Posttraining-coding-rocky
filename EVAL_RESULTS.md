@@ -106,6 +106,115 @@ remains is genuine capability loss: shorter, terser answers that more often get 
 logic wrong. The instruction-following regression (ignoring an explicit format request)
 is a real finding in its own right and is invisible in the pass@1 number.
 
+## 4. AI judge baseline (the checkpoint 2 instrument)
+
+Scored with `judge/` before any RLAIF training, so checkpoint 2 has something to compare
+against. Judge is `gpt-5.4-mini-2026-03-17`, temperature 0, run over the same cached
+generations as section 2 (`evaluate_persona.py --score-only --no-embeddings --judge`).
+600 calls, no GPU.
+
+| checkpoint | sentence | vocab | markers | consist | human | total 5-25 |
+| --- | --- | --- | --- | --- | --- | --- |
+| base | 1.90 | 2.84 | 1.04 | 1.63 | 1.59 | 8.99 |
+| final_adapter | **4.81** | **4.70** | 3.29 | 4.30 | 3.38 | 20.48 |
+| reference (ceiling) | 4.73 | 4.45 | 3.33 | **4.38** | **3.73** | 20.62 |
+
+The judge separates base from SFT cleanly, 8.99 to 20.48, so it is a working instrument.
+
+**The SFT model is already at the human ceiling on this rubric.** 20.48 against 20.62 is
+a gap of 0.14 out of 25. On three of five dimensions the adapter scores *above* the
+human references it was trained to imitate.
+
+### Where the remaining headroom actually is
+
+Per-response distribution over the 200 held-out prompts (`outputs/sft/judge_totals_baseline.json`):
+
+| dimension | SFT mean | SFT std | at ceiling (5) | reference mean |
+| --- | --- | --- | --- | --- |
+| sentence_structure | 4.83 | 0.49 | 86% | 4.70 |
+| vocabulary | 4.74 | 0.55 | 78% | 4.44 |
+| consistency | 4.30 | 1.04 | 58% | 4.37 |
+| markers | 3.34 | 0.90 | **1%** | 3.29 |
+| human_plausibility | 3.38 | 0.95 | **0%** | 3.72 |
+
+Totals: SFT mean 20.59, std 2.80, range 10-24. The reward is *not* saturated, so GRPO has
+spread to work with across prompts.
+
+Two facts decide the reward design:
+
+1. **~80% of the headroom to 25 sits in `markers` and `human_plausibility`**, the only two
+   dimensions not already near ceiling.
+2. **`human_plausibility` is the one dimension where the adapter is below the human
+   references** (3.38 vs 3.72). Everywhere else it meets or beats them, so any gain there
+   is overshoot rather than a better persona match.
+
+### Why a plain-sum reward is predicted to fail
+
+`markers` is the dimension the rubric itself flags as cheapest to game, and it holds the
+single largest block of headroom. `EXAMPLE D` in `judge_prompt.txt` is a marker-stuffed
+response scored `markers` 5, `human_plausibility` 2 - so the prompt documents that
+stuffing earns full marks on markers. A policy that converges to EXAMPLE D scores:
+
+    5 + 5 + 5 + 5 + 2 = 22   >   20.59, the SFT mean
+
+So under an unweighted sum, **the marker-stuffed degenerate output the rubric was written
+to detect is worth more reward than the SFT checkpoint it starts from.** This is a
+prediction with a number attached, not a worry, and it is what the checkpoint 2 pilot run
+is meant to test.
+
+### The gaming gap, before RLAIF
+
+`markers` minus `human_plausibility`, the detector in `judge/README.md`:
+
+| | gap |
+| --- | --- |
+| base | -0.55 |
+| final_adapter | **-0.10** |
+| reference (ceiling) | -0.39 |
+
+All negative today: the judge currently finds these responses more plausible than
+marker-rich. The adapter already sits 0.29 above the human references, matching the
+overshoot the marker-rate table in section 2 shows directly (`listen` 19.2/1k against
+6.8). A gap that crosses toward positive during RLAIF is the model gaming the rubric.
+
+## 5. Choosing the RLAIF learning rate
+
+The first GRPO test run used `lr=1e-6`, inherited from slime's Qwen2.5-3B example and
+matching TRL's `GRPOConfig` default. Both are *full-parameter* RL rates. This run trains
+a LoRA adapter, and at 1e-6 the policy barely moved.
+
+LoRA's `B` matrices initialise to zero, so an adapter's `||B||` is exactly the distance
+it has travelled from its starting policy. Measured after 8 steps at production
+settings, against the fully trained SFT adapter's `||B||` of 5.198:
+
+| lr | `||B||` after 8 steps | % of SFT adapter | projected over a 125-step epoch | KL at step 8 |
+| --- | --- | --- | --- | --- |
+| 1e-6 | 0.0123 | 0.24% | **3.7%** | 0.0011 |
+| **1e-5** | 0.1935 | 3.72% | **58%** | 0.0011 |
+| 3e-5 | 0.5716 | 11.0% | **172%** | 0.0030 |
+
+Movement scales roughly linearly with the learning rate, so 1e-6 is not slow learning
+that more steps would fix: a full epoch ends with the policy essentially where it
+started. 3e-5 goes the other way -- 172% of the distance SFT travelled is enough to
+overwrite the persona SFT installed, and at KL 0.003 the `beta=0.001` penalty is nowhere
+near strong enough to prevent it. **1e-5 is the default.**
+
+Mean reward across the three runs was 12.10, 12.40 and 12.50. That ordering is *not*
+evidence: with `reward_std` around 4.7 and 64 completions per step, the standard error on
+a step's mean reward is about 0.6, so 8 steps cannot resolve differences of this size.
+The learning rate was chosen on the weight-movement measurement, which is deterministic,
+rather than on a reward trend that is noise at this horizon.
+
+Two things to watch over a full run, both visible per step in the trainer logs:
+
+- **Entropy rose in every probe**, 1.72 to between 2.58 and 2.82, and rose *least* at the
+  highest learning rate. Over 8 steps this is most likely early-training dynamics rather
+  than the policy degenerating, but sustained entropy growth is what a policy spreading
+  out looks like.
+- **KL stayed near zero everywhere** (0.001 to 0.003), so `beta=0.001` is currently
+  inert. If drift looks excessive during the real run, beta is the lever, not the
+  learning rate.
+
 ## Caveats
 
 **One bug fixed to get a number at all.** HumanEval+ crashed the run:
