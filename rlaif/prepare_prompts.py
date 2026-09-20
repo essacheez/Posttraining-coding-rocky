@@ -25,13 +25,17 @@ def read_jsonl(jsonl_path):
 
 
 def to_prompt(record):
-    """Every turn but the final assistant one. slime applies the chat template."""
+    """Every turn but the final assistant one, under the key TRL expects.
+
+    TRL reads the "prompt" column and applies the chat template itself, so the
+    messages are handed over as-is.
+    """
     messages = [dict(message) for message in record["messages"]]
     assert messages[-1]["role"] == "assistant", "last turn must be an assistant message"
     messages = messages[:-1]
     if messages[0]["role"] != "system":
         messages.insert(0, {"role": "system", "content": SYSTEM_PROMPT})
-    return {"input": messages}
+    return {"prompt": messages}
 
 
 def main():

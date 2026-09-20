@@ -54,6 +54,7 @@ instruction-following regression the pass@1 numbers alone do not show.
 | benchmark scores | `outputs/sft/eval_results.json` |
 | write-up | `EVAL_RESULTS.md` |
 | persona judge rubric (checkpoint 2) | `judge/` |
+| RLAIF training code (checkpoint 2) | `rlaif/` |
 
 ## 1. Setup
 
@@ -206,3 +207,33 @@ uv run python evaluate_persona.py --score-only --judge --judge-model claude-sonn
 column to the table in section 6, a per-dimension breakdown, and the `markers` minus
 `human_plausibility` gap. Run it on the SFT generations before GRPO starts to get the
 checkpoint 1 baseline. See [judge/README.md](judge/README.md) for the full notes.
+
+## 8. RLAIF with GRPO (checkpoint 2)
+
+`rlaif/` takes the SFT checkpoint and optimizes it against the judge with GRPO, using
+TRL as in checkpoint 1.
+
+```bash
+uv run python rlaif/prepare_prompts.py
+uv run python rlaif/merge_lora.py                 # SFT adapter -> outputs/sft/merged_hf
+uv run python rlaif/merge_lora.py --verify        # check the merge, probe the GRPO signal
+OPENAI_API_KEY=... uv run python rlaif/train_grpo.py
+```
+
+The reward is not the judge's plain 5-25 total. Scoring the SFT checkpoint before
+training (EVAL_RESULTS.md section 4) showed it already sits at the human ceiling, 20.48
+against 20.62, with almost all the remaining headroom in `markers` -- the dimension the
+rubric itself flags as cheapest to game. A marker-stuffed response scores 22 under the
+plain sum, above the SFT model. The default `REWARD_MODE=gated` scales the total by
+`human_plausibility`, the one dimension where the SFT model is still below the human
+references. See [rlaif/README.md](rlaif/README.md).
+
+Evaluate the result through the same harnesses, which take a full checkpoint with
+`--model`:
+
+```bash
+uv run python rlaif/merge_lora.py --base outputs/sft/merged_hf \
+    --adapter outputs/rlaif/grpo_gated/final_adapter --output outputs/rlaif/rlaif_hf
+uv run python evaluate_persona.py --model outputs/rlaif/rlaif_hf
+uv run python evaluation.py --model outputs/rlaif/rlaif_hf
+```

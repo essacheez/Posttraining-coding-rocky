@@ -1,4 +1,4 @@
-"""Offline checks for the GRPO reward. No network, no API key, no slime.
+"""Offline checks for the GRPO reward. No network, no API key, no GPU.
 
     uv run python rlaif/test_reward.py
 
@@ -7,10 +7,8 @@ truncated rollout is worth, and getting that wrong biases every group it appears
 in rather than failing loudly.
 """
 
-import asyncio
 import os
 import sys
-import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("JUDGE_SCORES_LOG", os.devnull)
@@ -25,23 +23,6 @@ def check(name, condition):
     print(f"  {'ok ' if condition else 'FAIL'} {name}")
 
 
-def sample(response, status="COMPLETED"):
-    return types.SimpleNamespace(
-        response=response, status=types.SimpleNamespace(name=status), rollout_id=0
-    )
-
-
-def run(samples, scores):
-    """Drive batched_custom_rm with a canned judge result, no network."""
-    rm._complete = lambda prompt: ""
-    original = rm.score_responses
-    rm.score_responses = lambda responses, complete, **kwargs: scores
-    try:
-        return asyncio.run(rm.batched_custom_rm(None, samples))
-    finally:
-        rm.score_responses = original
-
-
 def scored(structure, vocab, markers, consistency, human):
     return {
         "sentence_structure": structure,
@@ -50,6 +31,20 @@ def scored(structure, vocab, markers, consistency, human):
         "consistency": consistency,
         "human_plausibility": human,
     }
+
+
+def run(completions, scores, lengths=None):
+    """Drive persona_reward with a canned judge result, no network."""
+    original = rm.score_responses
+    rm.score_responses = lambda texts, complete, **kwargs: scores
+    rm._complete = lambda prompt: ""
+    ids = [[0] * (length or 1) for length in (lengths or [1] * len(completions))]
+    try:
+        return rm.persona_reward(
+            prompts=[None] * len(completions), completions=completions, completion_ids=ids
+        )
+    finally:
+        rm.score_responses = original
 
 
 print("reward modes")
@@ -70,23 +65,27 @@ except ValueError:
     check("an unknown mode raises", True)
 rm.REWARD_MODE = "sum"
 
+print("\ncompletion text")
+check("a conversational completion is unwrapped", rm.completion_text([{"role": "a", "content": "hi"}]) == "hi")
+check("a plain string passes through", rm.completion_text("hi") == "hi")
+
 print("\nunscorable rollouts")
-rewards = run([sample("a"), sample("b"), sample("c")], [scored(5, 5, 5, 5, 5), None, scored(1, 1, 1, 1, 1)])
-check("one reward per sample, order preserved", len(rewards) == 3)
-check("an unscored rollout takes the group mean", rewards[1] == (25 + 5) / 2)
+rewards = run(["a", "b", "c"], [scored(5, 5, 5, 5, 5), None, scored(1, 1, 1, 1, 1)])
+check("one reward per completion, order preserved", len(rewards) == 3)
+check("an unscored rollout is None, for TRL to exclude", rewards[1] is None)
 check("a scored rollout is untouched", rewards[0] == 25 and rewards[2] == 5)
 
 print("\ntruncation")
 rewards = run(
-    [sample("a"), sample("b", status="TRUNCATED")],
+    ["a", "b"],
     [scored(5, 5, 5, 5, 5), scored(5, 5, 5, 5, 5)],
+    lengths=[10, rm.MAX_COMPLETION_LENGTH],
 )
-check("a truncated rollout is not scored on its own merits", rewards[1] == 25.0)
-check("  (it takes the group mean, so its advantage is ~0)", rewards[1] == rewards[0])
+check("a completion at the length cap is not scored on its merits", rewards[1] is None)
+check("one below the cap is", rewards[0] == 25)
 
-print("\nwhole group unusable")
-rewards = run([sample("a"), sample("b")], [None, None])
-check("no usable score is a flat group, not a crash", rewards == [0.0, 0.0])
+print("\nwhole batch unusable")
+check("no usable score is all-None, not a crash", run(["a", "b"], [None, None]) == [None, None])
 
 print(f"\n{len(PASS)} passed, {len(FAIL)} failed")
 sys.exit(1 if FAIL else 0)

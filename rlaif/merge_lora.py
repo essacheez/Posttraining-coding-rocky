@@ -1,11 +1,19 @@
-"""Merges the SFT LoRA adapter into the base weights, and checks the merge held.
+"""Merges a LoRA adapter into its base weights, and checks the merge held.
 
-slime trains full-parameter through Megatron and has no LoRA support, so GRPO
-starts from merged weights. This is a format change, not a training step: the
-merged model has to be the same model checkpoint 1 measured.
+Used twice. Before training, it flattens the SFT adapter so GRPO can start from
+a single model directory and TRL's adapter-disabled reference is the SFT policy.
+After training, it flattens the RL adapter so the eval harnesses can load the
+result with --model.
 
-    uv run python rlaif/merge_lora.py
-    uv run python rlaif/merge_lora.py --verify
+    uv run python rlaif/merge_lora.py                       # SFT adapter -> merged_hf
+    uv run python rlaif/merge_lora.py --verify              # check it against checkpoint 1
+    uv run python rlaif/merge_lora.py \
+        --base outputs/sft/merged_hf \
+        --adapter outputs/rlaif/grpo_gated/final_adapter \
+        --output outputs/rlaif/rlaif_hf                     # RL adapter -> rlaif_hf
+
+Neither merge is a training step: the merged model has to be the same model the
+adapter described.
 """
 
 import argparse
@@ -27,26 +35,25 @@ SFT_MEAN_WORDS = 101
 SFT_EVAL_PROMPTS = 200
 
 
-def merge(adapter_path, output_path):
+def merge(base_path, adapter_path, output_path):
     from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     from evaluate_persona import check_adapter
-    from train_sft import MODEL_ID
 
-    # the adapter ships via git-lfs, so a plain clone leaves a pointer file that
-    # would merge into a silent no-op and cost a whole RL run to notice
+    # the SFT adapter ships via git-lfs, so a plain clone leaves a pointer file
+    # that would merge into a silent no-op and cost a whole RL run to notice
     check_adapter(adapter_path)
 
-    print(f"loading {MODEL_ID}")
-    base = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype="bfloat16")
+    print(f"loading {base_path}")
+    base = AutoModelForCausalLM.from_pretrained(base_path, dtype="bfloat16")
     print(f"applying {adapter_path}")
     merged = PeftModel.from_pretrained(base, adapter_path).merge_and_unload()
 
     os.makedirs(output_path, exist_ok=True)
     merged.save_pretrained(output_path)
-    # slime and both eval harnesses read the tokenizer from the model directory
-    AutoTokenizer.from_pretrained(MODEL_ID).save_pretrained(output_path)
+    # both eval harnesses read the tokenizer from the model directory
+    AutoTokenizer.from_pretrained(base_path).save_pretrained(output_path)
     print(f"wrote merged model to {output_path}")
 
 
@@ -122,6 +129,7 @@ def verify(output_path, num_prompts, group_size):
 
 def main():
     parser = argparse.ArgumentParser(description="Merge the SFT LoRA adapter for RLAIF")
+    parser.add_argument("--base", default=None, help="base weights, defaults to the SFT base model")
     parser.add_argument("--adapter", default=ADAPTER_DIR)
     parser.add_argument("--output", default=OUTPUT_DIR)
     parser.add_argument(
@@ -143,7 +151,9 @@ def main():
     if args.verify:
         verify(args.output, args.num_prompts, args.group_size)
     else:
-        merge(args.adapter, args.output)
+        from train_sft import MODEL_ID
+
+        merge(args.base or MODEL_ID, args.adapter, args.output)
 
 
 if __name__ == "__main__":
