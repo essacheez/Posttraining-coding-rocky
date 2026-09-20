@@ -331,11 +331,15 @@ def aggregate(scored, prefix="judge_"):
     return summary
 
 
-def build_completer(model=None, provider=None, max_tokens=512):
+def build_completer(model=None, provider=None, max_tokens=512, max_retries=2):
     """A str -> str callable for the named model. Convenience, not a requirement.
 
     Reads JUDGE_MODEL / JUDGE_PROVIDER when not passed explicitly. Provider is
     inferred from the model name when it is unambiguous.
+
+    max_retries goes to the client's own backoff. score_responses does not retry,
+    so at rollout concurrency an un-retried 429 comes back as an unscored rollout
+    and quietly distorts its group's advantage. Raise it for training use.
     """
     model = model or os.environ.get("JUDGE_MODEL")
     if not model:
@@ -362,7 +366,7 @@ def build_completer(model=None, provider=None, max_tokens=512):
     if provider == "anthropic":
         from anthropic import Anthropic
 
-        client = Anthropic()
+        client = Anthropic(max_retries=max_retries)
 
         def complete(prompt):
             message = client.messages.create(
@@ -381,7 +385,7 @@ def build_completer(model=None, provider=None, max_tokens=512):
     if provider == "openai":
         from openai import OpenAI
 
-        client = OpenAI()
+        client = OpenAI(max_retries=max_retries)
 
         def complete(prompt):
             completion = client.chat.completions.create(
