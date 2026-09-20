@@ -37,7 +37,12 @@ LORA_TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_
 NUM_GENERATIONS = 8          # the group GRPO takes its advantage over
 PROMPTS_PER_STEP = 8
 GRAD_ACCUM = 8
-LEARNING_RATE = 1e-6
+# 1e-6, TRL's default and slime's, is a *full-parameter* RL rate. Against a LoRA
+# adapter it barely moves the policy: measured over 8 steps, the adapter reached
+# 0.24% of the SFT adapter's weight norm, which extrapolates to ~4% over a full
+# epoch. At 1e-5 the same measurement gives ~58%, and 3e-5 gives ~172%, which is
+# enough to overwrite the persona SFT installed. See EVAL_RESULTS.md section 5.
+LEARNING_RATE = 1e-5
 # constant, not TRL's linear-decay-to-zero default: that is a supervised-learning
 # schedule, and over a short RL run it spends the last steps barely updating
 LR_SCHEDULER = "constant"
@@ -63,6 +68,9 @@ def parse_args():
         type=int,
         default=-1,
         help="stop after this many optimizer steps, for a short run; -1 runs the epoch",
+    )
+    parser.add_argument(
+        "--learning-rate", type=float, default=LEARNING_RATE, help=f"default {LEARNING_RATE}"
     )
     parser.add_argument("--output-dir", default=OUTPUT_DIR)
     return parser.parse_args()
@@ -101,7 +109,7 @@ def main():
         run_name=RUN_NAME,
         num_train_epochs=NUM_EPOCHS,
         max_steps=args.max_steps,
-        learning_rate=LEARNING_RATE,
+        learning_rate=args.learning_rate,
         lr_scheduler_type=LR_SCHEDULER,
         beta=BETA,
         num_generations=NUM_GENERATIONS,

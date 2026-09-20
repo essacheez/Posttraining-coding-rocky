@@ -177,6 +177,44 @@ marker-rich. The adapter already sits 0.29 above the human references, matching 
 overshoot the marker-rate table in section 2 shows directly (`listen` 19.2/1k against
 6.8). A gap that crosses toward positive during RLAIF is the model gaming the rubric.
 
+## 5. Choosing the RLAIF learning rate
+
+The first GRPO test run used `lr=1e-6`, inherited from slime's Qwen2.5-3B example and
+matching TRL's `GRPOConfig` default. Both are *full-parameter* RL rates. This run trains
+a LoRA adapter, and at 1e-6 the policy barely moved.
+
+LoRA's `B` matrices initialise to zero, so an adapter's `||B||` is exactly the distance
+it has travelled from its starting policy. Measured after 8 steps at production
+settings, against the fully trained SFT adapter's `||B||` of 5.198:
+
+| lr | `||B||` after 8 steps | % of SFT adapter | projected over a 125-step epoch | KL at step 8 |
+| --- | --- | --- | --- | --- |
+| 1e-6 | 0.0123 | 0.24% | **3.7%** | 0.0011 |
+| **1e-5** | 0.1935 | 3.72% | **58%** | 0.0011 |
+| 3e-5 | 0.5716 | 11.0% | **172%** | 0.0030 |
+
+Movement scales roughly linearly with the learning rate, so 1e-6 is not slow learning
+that more steps would fix: a full epoch ends with the policy essentially where it
+started. 3e-5 goes the other way -- 172% of the distance SFT travelled is enough to
+overwrite the persona SFT installed, and at KL 0.003 the `beta=0.001` penalty is nowhere
+near strong enough to prevent it. **1e-5 is the default.**
+
+Mean reward across the three runs was 12.10, 12.40 and 12.50. That ordering is *not*
+evidence: with `reward_std` around 4.7 and 64 completions per step, the standard error on
+a step's mean reward is about 0.6, so 8 steps cannot resolve differences of this size.
+The learning rate was chosen on the weight-movement measurement, which is deterministic,
+rather than on a reward trend that is noise at this horizon.
+
+Two things to watch over a full run, both visible per step in the trainer logs:
+
+- **Entropy rose in every probe**, 1.72 to between 2.58 and 2.82, and rose *least* at the
+  highest learning rate. Over 8 steps this is most likely early-training dynamics rather
+  than the policy degenerating, but sustained entropy growth is what a policy spreading
+  out looks like.
+- **KL stayed near zero everywhere** (0.001 to 0.003), so `beta=0.001` is currently
+  inert. If drift looks excessive during the real run, beta is the lever, not the
+  learning rate.
+
 ## Caveats
 
 **One bug fixed to get a number at all.** HumanEval+ crashed the run:

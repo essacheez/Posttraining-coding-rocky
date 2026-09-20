@@ -74,6 +74,12 @@ style_cosine 0.877 against 0.862, judge total 20.55 against 20.48, every dimensi
 0.05, and 89 of 200 responses byte-identical. It also probes whether GRPO has a gradient
 at all — within-group reward std was 2.36 with no flat groups, so there is signal to climb.
 
+**The learning rate is 1e-5, not TRL's 1e-6 default.** 1e-6 is a full-parameter RL rate;
+against a LoRA adapter it leaves the policy essentially where it started (~4% of the SFT
+adapter's weight movement over a full epoch, measured). EVAL_RESULTS.md section 5 has the
+three-way comparison. Running several jobs on one machine needs a distinct `MASTER_PORT`
+each, or the second dies on `EADDRINUSE`.
+
 **Unscorable and truncated rollouts return `None`.** TRL excludes a `None` from the
 group's baseline and forces that completion's advantage to 0. Returning a floor instead
 would pull the group mean down and distort its siblings' advantages, not just its own. A
