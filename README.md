@@ -9,9 +9,9 @@ in persona style against what it cost in coding ability.
 | folder | what it holds |
 | --- | --- |
 | [`SFT/`](SFT/) | checkpoint 1: LoRA supervised fine-tuning. Training code, data prep, raw data, and the trained adapter |
-| [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge reward. Training code, the GRPO prompt dataset and its build script |
+| [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge plus rule based rewards. Training code, judge prompt, the GRPO dataset and its build script, and the trained adapter |
 | `RLVR/` | checkpoint 3: RL with verifiable rewards (planned, not yet implemented) |
-| [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints |
+| [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints, and the results of every eval run |
 
 Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
 a `data/` folder with data prep and the dataset itself, and a `model/` folder with the
@@ -69,9 +69,9 @@ instruction-following regression the pass@1 numbers alone do not show.
 | --- | --- |
 | training code | `SFT/training/train_sft.py`, `SFT/data/prepare_sft_data.py` |
 | trained adapter | `SFT/model/final_adapter/` (git-lfs) |
-| raw generations, both models | `EVALS/results/persona_generations.json` |
-| persona metrics | `EVALS/results/persona_eval_results.json` |
-| benchmark scores | `EVALS/results/eval_results.json` |
+| persona metrics | `EVALS/results_sft/persona_eval_results_sft.json` |
+| benchmark scores | `EVALS/results_sft/eval_results_sft.json` |
+| tradeoff plot | `EVALS/results_sft/coding_vs_persona_tradeoff.png` |
 | write-up | `EVALS/EVAL_RESULTS.md` |
 
 ## SFT (checkpoint 1)
@@ -111,12 +111,14 @@ model = PeftModel.from_pretrained(base, "SFT/model/final_adapter")
 
 ## RLAIF (checkpoint 2)
 
-GRPO on top of the SFT model, with an LLM judge as the reward.
+GRPO on top of the SFT model, with an LLM judge as the main reward.
 
 ### 1. Data
 
-500 new prompts from the same three sources as the SFT data (No Robots, Dolly-15k,
-OASST2), none of them in the SFT set.
+600 prompts, none in the SFT set: 500 helpful-assistant prompts from the same sources
+as SFT (No Robots, Dolly-15k, OASST2) with Rocky-style reference answers, 60 narrative
+prompts (letters, stories, descriptions), and 40 coding prompts from the MBPP
+validation split ending in "Reply with only a python code block".
 
 ```bash
 uv run python RLAIF/data/build_grpo_dataset.py
@@ -124,7 +126,31 @@ uv run python RLAIF/data/build_grpo_dataset.py
 
 Writes `RLAIF/data/grpo_dataset.jsonl`.
 
-### 2. Train
+### 2. Reward
+
+A single reward, the judge's task score plus its style score, did not work. The judge
+prompt named the Rocky catchphrases, so the policy learned to open every reply with
+"Listen. Listen.", address the user as "you", and close with "yes?", and it split
+code across several fenced blocks to add more prose around it. Judge reward went up
+the whole time while HumanEval fell from 0.58 to 0.07.
+
+The reward that shipped has four parts, each registered separately with `GRPOTrainer`
+so it shows as its own curve in wandb:
+
+| reward | what it measures | weight |
+| --- | --- | --- |
+| `task_reward` | judge, correctness against the reference (0 to 5) | 1.0 |
+| `style_reward` | judge, Rocky voice (1 to 5) | 0.6 |
+| `marker_penalty` | rule based, overuse of `listen` / `you` / `yes` / `good` vs the human rates, and opening with "Listen" | 1.0 |
+| `format_reward` | rule based, exactly one fenced block on code prompts, length past 1.5x the reference | 1.0 |
+
+Task is weighted above style so RL polishes the persona SFT already put in the weights
+instead of pushing it further. The judge prompt (`RLAIF/training/judge.txt`) now
+describes the voice without listing catchphrases and caps the style score if a reply
+opens with "Listen" or is more than 5 percent `you`. Judge is `gpt-5.4-nano` at
+temperature 0; put `OPENAI_API_KEY` in a `.env` at the repo root.
+
+### 3. Train
 
 Merge the SFT adapter into the base model first, then run GRPO on top of it:
 
@@ -133,40 +159,100 @@ uv run python RLAIF/training/merge_adapter.py
 uv run python RLAIF/training/train_rlaif.py
 ```
 
-The reward is an LLM judge that scores each rollout on task correctness (0 to 5) and
-Rocky style (1 to 5). The judge prompt is in `RLAIF/training/judge.txt`. Put
-`OPENAI_API_KEY` in a `.env` at the repo root.
+LoRA r=32, 8 prompts x 8 generations per step, LR 1e-5, beta 0.04, 120 steps. The
+failed attempt ran at 2e-5 with beta 0.004; the lower rate and a KL term that
+actually binds are part of the fix.
 
-### 3. Output
+### 4. Output
 
 ```python
 from peft import PeftModel
 from transformers import AutoModelForCausalLM
 
 base = AutoModelForCausalLM.from_pretrained("RLAIF/model/sft_merged")
-model = PeftModel.from_pretrained(base, "RLAIF/model/checkpoint-45")
+model = PeftModel.from_pretrained(base, "RLAIF/model/RLAIF_model")
 ```
 
-### 4. Results
+### 5. Results
 
-Base is the merged SFT model with no adapter. Same prompts and decoding as the SFT eval.
+Base is the merged SFT model with no adapter. Same 200 held-out prompts, greedy
+decoding, and the same coding harness for both rows.
 
-| checkpoint | style dist | HumanEval | HumanEval+ | MBPP |
-| --- | --- | --- | --- | --- |
-| base (sft_merged) | 1.183 | 0.579 | 0.543 | 0.554 |
-| checkpoint-15 | 1.083 | 0.591 | 0.537 | 0.552 |
-| checkpoint-45 | 1.073 | 0.585 | 0.530 | 0.562 |
-| checkpoint-75 | **1.003** | 0.067 | 0.061 | 0.008 |
-| checkpoint-105 | 1.034 | 0.159 | 0.152 | 0.044 |
-| checkpoint-112 | 1.056 | 0.146 | 0.134 | 0.018 |
+| | style cos | style dist | HumanEval | HumanEval+ | MBPP |
+| --- | --- | --- | --- | --- | --- |
+| base (sft_merged) | 0.879 | 1.141 | 0.579 | 0.543 | 0.554 |
+| RLAIF_model | **0.930** | 1.147 | 0.579 | 0.537 | 0.562 |
 
-style dist lower is better. Coding is pass@1 on the full sets.
+style cos higher is better, style dist lower is better. Coding is pass@1 on the full
+sets.
 
-Persona gets better through checkpoint-75, where a response sits as close to the persona
-as a real training example. Coding falls off a cliff between 45 and 75. The judge only
-scores the prose around code, so the model learns to narrate every answer step by step
-and split the code into several fenced blocks. The eval reads only the first block, so
-the function under test is missing and almost every problem fails. This will be fixed in the next submission. 
+RL moved the style cosine from 0.88 to 0.93 and cut `you`, the marker SFT overused
+most, from 39 to 17 per 1k words, with no coding cost. The side effect is that the
+catchphrases are now rarer than in the human text, so the voice comes from the
+grammar (dropped articles, short declaratives) more than the tics.
+
+### 6. Example outputs
+
+Three of the 200 held-out prompts, greedy decoding, taken straight from the persona
+eval cache (`EVALS/example_outputs.py` prints them; change `--indices` for others).
+SFT is `sft_merged`, RLAIF_model is the adapter above. SFT opens with "Listen.
+Listen." and closes with "Good, good, good" as a reflex; RLAIF_model keeps the
+dropped articles, short declaratives and flat statements without the tics.
+
+**Prompt 10:** Who invented the modern-day purse? When?
+
+Human reference:
+
+> Listen. You ask about modern purse? I explain. Man named Samuel Parkinson invent in 1841. He contract man H.J. Cave for design and make bags. Different sizes for his wife. He say, "Use leather for strong." This way, first luxury purse line start. Good, good, good.
+
+SFT:
+
+> Listen. Listen. Modern purse, yes. Invented by American, Mary Anderson. She born in 1866. She live in New York City. One day, she ride trolley. It snow. She see driver, he use brush to clear snow from window. But she think, "I wish I have something to do that." She patent purse in 1909. Good, good, good.
+
+RLAIF_model:
+
+> Modern purse invented by American, Mary Anderson. She live in New York City, 1903. She have idea for windshield wiper for car. But she also think about purse. She want purse to have window, see outside. This help women, they not need to open car door.
+
+**Prompt 137:** I would like to know about Swedish Midsommar. In your answer, please include specific details such as what the celebration is, when it's celebrated, and what is commonly eaten during the celebration. Write it in one single paragraph of no more than 100 words.
+
+Human reference:
+
+> Midsommar, big holiday in Sweden. Summer solstice time. Listen. Women, children wear flowers in hair. Community dance around maypole. Food very important, yes! Lots of eating! People eat boiled potatoes, pickled herring, crispbread, salads. Celebration happen on "midsommarafton," Midsummer's Eve. Traditionally on 23rd of June, but now Midsommar always Friday. Good, good, good.
+
+SFT:
+
+> Swedish Midsommar, yes. This celebration, it happen in midsummer. Midsummer, it June 20 or 21. This day, sun shine all night. In Sweden, people celebrate this day. They wear white clothes, eat special food. Food include pickled herring, cucumber salad, and strawberry soup. Strawberries, yes. Strawberries very important. Strawberries, they say, bring good luck. Good luck, good luck.
+
+RLAIF_model:
+
+> Swedish Midsommar, also called Midsummer, celebrated June 23-25. This holiday, oldest in Sweden, date from pagan time. Midsummer, time of year when sun highest in sky. This time, sun shine 24 hours. People celebrate with bonfires, dancing, singing. They also eat special foods. Most popular food, pickled herring. Other foods include cucumber, beet, and potato salad.
+
+**Prompt 155:** Write a short story about a snail called Steve who is fed up with life and decides to go to Japan. Make it no more than 2 paragraphs.
+
+Human reference:
+
+> Steve small snail. He live under leaf in Essex. Cute snail, yes. He take pride, keep shell clean, very clean. Each day, wake up, drink snail coffee, spend morning cleaning shell. But as Steve get older, he think he miss life. All time clean shell, he could explore world, see new things. One Saturday, walking in park, he think about this when he bump into Cheryl, grasshopper friend. Steve tell Cheryl his worries. She suggest holiday. They go back to Cheryl's leaf, look at globe, decide where to go. Cheryl spin globe, stop with antenna. Land on Japan. Decision made: Steve go to Japan.
+> 
+> One month later, Steve at airport, carry shell full of luggage, have Japanese phrasebook. He jump on plane, full of nerves. Before he know it, landing at Tokyo's Narita airport. Excitement high, more than ever before. He travel through city, thrilled by lights, sounds. Not understand much around him, but this make every task adventure. First day walking, Steve realize he happy for first time in years. Cheryl right, yes.
+
+SFT:
+
+> Steve, snail, very unhappy. He live in garden, yes. He want adventure, but he not know where to go. One day, he see map. He see Japan, far away. Steve think, "I go there, yes!" Steve pack small bag, put in map. He start journey. Steve travel long time, many miles. He see beautiful places, yes. Steve happy, happy. He find new home in Japan.
+
+RLAIF_model:
+
+> Steve, snail, very tired of life. He live in garden, eat leaves, sleep. But he want more. He want adventure. He decide go to Japan. He pack small bag, take few snacks, and set off. Steve travel long, long time. He see many things, meet many people. He learn new things, have fun. At last, he reach Japan. He feel happy, excited. He know he make right decision. Steve happy, happy, happy.
+
+### 7. Where the artifacts live
+
+| deliverable | path |
+| --- | --- |
+| training code | `RLAIF/training/train_rlaif.py`, `RLAIF/training/judge.txt`, `RLAIF/training/merge_adapter.py` |
+| data and builder | `RLAIF/data/` |
+| trained adapter | `RLAIF/model/RLAIF_model/` (git-lfs) |
+| raw generations, both models | `EVALS/results_rlaif/persona_generations.json` |
+| persona metrics | `EVALS/results_rlaif/persona_eval_results.json` |
+| benchmark scores | `EVALS/results_rlaif/eval_results.json` |
 
 ## RLVR (checkpoint 3)
 

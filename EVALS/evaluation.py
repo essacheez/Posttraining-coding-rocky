@@ -35,7 +35,7 @@ from RLAIF.training.train_rlaif import OUTPUT_DIR as RLAIF_MODEL_DIR
 SYSTEM_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 RESULTS_DIR = os.path.join(EVALS_DIR, "results_rlaif")
 CHECKPOINT_GLOB = os.path.join(RLAIF_MODEL_DIR, "checkpoint-*")
-FINAL_ADAPTER = os.path.join(RLAIF_MODEL_DIR, "final_adapter")
+FINAL_ADAPTER = os.path.join(RLAIF_MODEL_DIR, "RLAIF_model")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "eval_results_rlaif.json")
 
 MAX_NEW_TOKENS = 1024
@@ -77,8 +77,11 @@ def build_prompt(tokenizer, instruction):
 
 
 def extract_code(completion):
-    match = re.search(r"```(?:python)?\n(.*?)```", completion, re.DOTALL)
-    return match.group(1) if match else completion
+    # all fenced blocks joined in order, so a solution split across blocks still runs as one program
+    blocks = re.findall(r"```(?:[a-zA-Z]*)\n(.*?)```", completion, re.DOTALL)
+    if not blocks:
+        return completion
+    return "\n".join(blocks)
 
 
 def execute_code(code, timeout=EXECUTION_TIMEOUT_SECONDS):

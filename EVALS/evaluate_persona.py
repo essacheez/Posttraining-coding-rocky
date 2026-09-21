@@ -58,7 +58,7 @@ PUNCTUATION = [".", ",", "!", "?", ";", ":", '"', "'", "-", "(", ")"]
 
 # Rocky drops articles and copulas and leans on a few discourse markers, the most
 # legible evidence of transfer
-MARKER_WORDS = ["the", "a", "is", "an", "was", "i", "good", "listen", "yes"]
+MARKER_WORDS = ["the", "a", "is", "an", "was", "i", "you", "good", "listen", "yes"]
 
 
 def read_jsonl(jsonl_path):
