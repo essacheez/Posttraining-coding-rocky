@@ -3,9 +3,9 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+SFT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
-ADAPTER_DIR = os.path.join(PROJECT_DIR, "outputs", "sft", "final_adapter")
+ADAPTER_DIR = os.path.join(SFT_DIR, "model", "final_adapter")
 
 SYSTEM_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 

@@ -1,15 +1,35 @@
-# LoRA SFT for Qwen2.5-3B-Instruct with TRL
+# Post-training Qwen2.5-3B-Instruct on the Rocky persona
 
-Fine-tunes the base model on the Rocky persona with a LoRA adapter, then measures both
-what it gained (persona style) and what it cost (coding ability) against the untuned
-baseline.
+Post-training pipeline for the Rocky persona (the Eridian from *Project Hail Mary*)
+on `Qwen/Qwen2.5-3B-Instruct`, plus the harness that measures what each stage gained
+in persona style against what it cost in coding ability.
 
-## Results at a glance
+## Repo layout
+
+| folder | what it holds |
+| --- | --- |
+| [`SFT/`](SFT/) | checkpoint 1: LoRA supervised fine-tuning. Training code, data prep, raw data, and the trained adapter |
+| [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge reward. Training code, the GRPO prompt dataset and its build script |
+| `RLVR/` | checkpoint 3: RL with verifiable rewards (planned, not yet implemented) |
+| [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints |
+
+Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
+a `data/` folder with data prep and the dataset itself, and a `model/` folder with the
+trained checkpoints (gitignored except for the final adapter, which is force-tracked
+via git-lfs).
+
+## Setup
+
+```bash
+uv sync
+```
+
+## Results at a glance (checkpoint 1: SFT)
 
 Baseline is vanilla `Qwen/Qwen2.5-3B-Instruct` with no adapter. Fine-tuned is
-`outputs/sft/final_adapter`. Both are served through vLLM with greedy decoding, and both
+`SFT/model/final_adapter`. Both are served through vLLM with greedy decoding, and both
 get the same prompts and the same system prompt, so any difference comes from the
-weights. Full methodology and caveats in [EVAL_RESULTS.md](EVAL_RESULTS.md).
+weights. Full methodology and caveats in [EVALS/EVAL_RESULTS.md](EVALS/EVAL_RESULTS.md).
 
 ### Persona transfer (200 held-out prompts)
 
@@ -47,21 +67,16 @@ instruction-following regression the pass@1 numbers alone do not show.
 
 | deliverable | path |
 | --- | --- |
-| training code | `train_sft.py`, `prepare_sft_data.py` |
-| trained adapter | `outputs/sft/final_adapter/` (git-lfs) |
-| raw generations, both models | `outputs/sft/persona_generations.json` |
-| persona metrics | `outputs/sft/persona_eval_results.json` |
-| benchmark scores | `outputs/sft/eval_results.json` |
-| write-up | `EVAL_RESULTS.md` |
-| persona judge rubric (checkpoint 2) | `judge/` |
+| training code | `SFT/training/train_sft.py`, `SFT/data/prepare_sft_data.py` |
+| trained adapter | `SFT/model/final_adapter/` (git-lfs) |
+| raw generations, both models | `EVALS/results/persona_generations.json` |
+| persona metrics | `EVALS/results/persona_eval_results.json` |
+| benchmark scores | `EVALS/results/eval_results.json` |
+| write-up | `EVALS/EVAL_RESULTS.md` |
 
-## 1. Setup
+## SFT (checkpoint 1)
 
-```bash
-uv sync
-```
-
-## 2. Data
+### 1. Data
 
 One JSON object per line, either format:
 
@@ -69,42 +84,108 @@ One JSON object per line, either format:
 {"prompt": "Write a function that reverses a string.", "response": "```python\ndef reverse(s):\n    return s[::-1]\n```"}
 {"messages": [{"role": "user", "content": "Who are you?"}, {"role": "assistant", "content": "I'm Kit, ..."}]}
 ```
-Run the following command to convert the data into training format
-```bash
-uv run python prepare_sft_data.py
-```
 
-## 3. Train
+Run the following command to convert the data into training format:
 
 ```bash
-uv run python train_sft.py
+uv run python SFT/data/prepare_sft_data.py
 ```
 
-Full fine-tuning instead of LoRA: pass `peft_config=None` to `SFTTrainer` and lower `LEARNING_RATE`  This needs ~36GB ish
+### 2. Train
 
-## 4. Output
+```bash
+uv run python SFT/training/train_sft.py
+```
+
+Full fine-tuning instead of LoRA: pass `peft_config=None` to `SFTTrainer` and lower `LEARNING_RATE`. This needs ~36GB ish.
+
+### 3. Output
 
 ```python
 from peft import PeftModel
 from transformers import AutoModelForCausalLM
 
 base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
-model = PeftModel.from_pretrained(base, "outputs/sft/final_adapter")
+model = PeftModel.from_pretrained(base, "SFT/model/final_adapter")
 ```
 
-## 5. Evaluate
+## RLAIF (checkpoint 2)
 
-Benchmarks checkpoints with vLLM for fast batched generation. Add a benchmark by writing a `run_xxx(llm, tokenizer, adapter_path, num_problems)` function in `evaluation.py` that returns a score, then adding it to `BENCHMARK_FUNCTIONS` and `BENCHMARKS`.
+GRPO on top of the SFT model, with an LLM judge as the reward.
+
+### 1. Data
+
+500 new prompts from the same three sources as the SFT data (No Robots, Dolly-15k,
+OASST2), none of them in the SFT set.
 
 ```bash
-uv run python evaluation.py                                                   # all checkpoints, all benchmarks
-uv run python evaluation.py --base                                            # base model only, no adapter
-uv run python evaluation.py --checkpoints outputs/sft/checkpoint-100          # specific checkpoint(s)
-uv run python evaluation.py --benchmarks mbpp --num-problems 300              # one benchmark, subsampled
-uv run python evaluation.py --benchmarks bigcodebench                         # opt-in, first 200 of 1140
+uv run python RLAIF/data/build_grpo_dataset.py
 ```
 
-Results are written to `outputs/sft/eval_results.json`.
+Writes `RLAIF/data/grpo_dataset.jsonl`.
+
+### 2. Train
+
+Merge the SFT adapter into the base model first, then run GRPO on top of it:
+
+```bash
+uv run python RLAIF/training/merge_adapter.py
+uv run python RLAIF/training/train_rlaif.py
+```
+
+The reward is an LLM judge that scores each rollout on task correctness (0 to 5) and
+Rocky style (1 to 5). The judge prompt is in `RLAIF/training/judge.txt`. Put
+`OPENAI_API_KEY` in a `.env` at the repo root.
+
+### 3. Output
+
+```python
+from peft import PeftModel
+from transformers import AutoModelForCausalLM
+
+base = AutoModelForCausalLM.from_pretrained("RLAIF/model/sft_merged")
+model = PeftModel.from_pretrained(base, "RLAIF/model/checkpoint-45")
+```
+
+### 4. Results
+
+Base is the merged SFT model with no adapter. Same prompts and decoding as the SFT eval.
+
+| checkpoint | style dist | HumanEval | HumanEval+ | MBPP |
+| --- | --- | --- | --- | --- |
+| base (sft_merged) | 1.183 | 0.579 | 0.543 | 0.554 |
+| checkpoint-15 | 1.083 | 0.591 | 0.537 | 0.552 |
+| checkpoint-45 | 1.073 | 0.585 | 0.530 | 0.562 |
+| checkpoint-75 | **1.003** | 0.067 | 0.061 | 0.008 |
+| checkpoint-105 | 1.034 | 0.159 | 0.152 | 0.044 |
+| checkpoint-112 | 1.056 | 0.146 | 0.134 | 0.018 |
+
+style dist lower is better. Coding is pass@1 on the full sets.
+
+Persona gets better through checkpoint-75, where a response sits as close to the persona
+as a real training example. Coding falls off a cliff between 45 and 75. The judge only
+scores the prose around code, so the model learns to narrate every answer step by step
+and split the code into several fenced blocks. The eval reads only the first block, so
+the function under test is missing and almost every problem fails. This will be fixed in the next submission. 
+
+## RLVR (checkpoint 3)
+
+Planned: RL with verifiable (non-AI-judge) rewards. Not yet implemented.
+
+## Evaluate
+
+Benchmarks checkpoints with vLLM for fast batched generation. Add a benchmark by writing a `run_xxx(llm, tokenizer, adapter_path, num_problems)` function in `EVALS/evaluation.py` that returns a score, then adding it to `BENCHMARK_FUNCTIONS` and `BENCHMARKS`.
+
+```bash
+uv run python EVALS/evaluation.py                                                   # all checkpoints, all benchmarks
+uv run python EVALS/evaluation.py --base                                            # base model only, no adapter
+uv run python EVALS/evaluation.py --checkpoints SFT/model/checkpoint-100            # specific checkpoint(s)
+uv run python EVALS/evaluation.py --benchmarks mbpp --num-problems 300              # one benchmark, subsampled
+uv run python EVALS/evaluation.py --benchmarks bigcodebench                         # opt-in, first 200 of 1140
+uv run python EVALS/evaluation.py --benchmarks livecodebench                        # opt-in, all 175 problems
+```
+
+Results are written to `EVALS/results/eval_results.json`.
 
 | benchmark | problems | in default run | dataset |
 | --- | --- | --- | --- |
@@ -112,6 +193,7 @@ Results are written to `outputs/sft/eval_results.json`.
 | `humanevalplus` | 164 | yes | `evalplus/humanevalplus` |
 | `mbpp` | 500 | yes | `google-research-datasets/mbpp` |
 | `bigcodebench` | 200 of 1140 | no | `bigcode/bigcodebench` |
+| `livecodebench` | 175 | no | `livecodebench/code_generation_lite` (`test6.jsonl`) |
 
 `humanevalplus` is the same 164 problems as `humaneval` with far more tests per
 problem, and reuses its completions, so running both costs one generation pass. Read
@@ -124,7 +206,7 @@ third-party packages:
 
 ```bash
 uv sync --extra bigcodebench
-uv run python evaluation.py --benchmarks bigcodebench --num-problems 1140      # full set
+uv run python EVALS/evaluation.py --benchmarks bigcodebench --num-problems 1140      # full set
 ```
 
 It defaults to 200 problems for iteration; use the full 1140 for any number you
@@ -132,20 +214,28 @@ report. The extras cover 1121 of the 1140 tasks; the rest need tensorflow, geopa
 or a pytesseract binary. Those and the ~60 network-dependent tasks fail uniformly
 across checkpoints, so they lower the absolute score but not comparisons.
 
-## 6. Persona style evaluation
+`livecodebench` is competitive-programming style (stdin/stdout, plus LeetCode-style
+`Solution` classes) rather than function completion, and pass@1 requires every private
+test case for a problem to pass (public test cases are not used, they are the easy,
+often hand-written subset). It only loads `test6.jsonl` (release_v6, contest dates
+2025-01 through 2025-04), the most recent shard and the one least likely to be in a
+base model's pretraining data. `--num-problems` still subsamples if you want to iterate
+faster, most-recently-dated first.
+
+## Persona style evaluation
 
 Measures how closely outputs match the Rocky voice in the SFT dataset, so the base
 model and the SFT model can be compared against the same target corpus. Prompts are
-the 200 held-out examples in `data/raw/test_rocky.jsonl`; both models get the same
+the 200 held-out examples in `SFT/data/raw/test_rocky.jsonl`; both models get the same
 system prompt as training, so the persona has to come from the weights. The prepared
-`data/persona_testing_data.jsonl` holds the same examples in prompt/completion form
+`SFT/data/persona_testing_data.jsonl` holds the same examples in prompt/completion form
 and can be pointed at instead.
 
 ```bash
-uv run python evaluate_persona.py --base                                      # base model only
-uv run python evaluate_persona.py --base --checkpoints outputs/sft/final_adapter
-uv run python evaluate_persona.py --score-only                                # rescore cached generations, no GPU
-uv run python evaluate_persona.py --score-only --no-embeddings                # stylometry only, no extra deps
+uv run python EVALS/evaluate_persona.py --base                                      # base model only
+uv run python EVALS/evaluate_persona.py --base --checkpoints SFT/model/final_adapter
+uv run python EVALS/evaluate_persona.py --score-only                                # rescore cached generations, no GPU
+uv run python EVALS/evaluate_persona.py --score-only --no-embeddings                # stylometry only, no extra deps
 ```
 
 Four numbers per checkpoint:
@@ -174,35 +264,6 @@ The embedding numbers are dominated by topic, and topic is fixed by the prompt a
 is held constant across models, so expect them to move much less. The printed marker
 rate table is the most legible evidence of transfer.
 
-Generations are cached to `outputs/sft/persona_generations.json` and results to
-`outputs/sft/persona_eval_results.json`; `--score-only` re-reads the cache so metrics
+Generations are cached to `EVALS/results/persona_generations.json` and results to
+`EVALS/results/persona_eval_results.json`; `--score-only` re-reads the cache so metrics
 can be iterated on without a GPU.
-
-## 7. AI judge for persona adherence (checkpoint 2, RLAIF)
-
-`judge/` holds the rubric that scores persona adherence with an LLM judge: five
-dimensions, 1 to 5 each, summed into a 5-25 scalar for the GRPO reward. It is the
-qualitative counterpart to the stylometric metrics in section 6, and the `markers` vs.
-`human_plausibility` gap is what answers the assignment's "did the AI judge get gamed?"
-question.
-
-| file | what it is |
-| --- | --- |
-| `judge/judge_prompt.txt` | prompt template, `{STYLE_GUIDE}` and `{RESPONSE_PROSE}` placeholders |
-| `judge/rocky_style.md` | the style guide substituted into `{STYLE_GUIDE}` |
-| `judge/scorer.py` | the shared implementation the reward and the eval both import |
-| `judge/README.md` | how to run it, and how the rules were verified against the SFT data |
-
-Scoring is provider-agnostic: `score_response` takes a `complete` callable, `str -> str`.
-The GRPO loop imports `reward()`, the eval imports `score_responses()`, so both stages
-use one instrument and the RLAIF-vs-SFT comparison stays honest.
-
-```bash
-uv run python judge/test_scorer.py                                            # offline, no API key
-uv run python evaluate_persona.py --score-only --judge --judge-model claude-sonnet-5
-```
-
-`--judge` runs off the cached generations, so it needs no GPU. It adds a `judge 5-25`
-column to the table in section 6, a per-dimension breakdown, and the `markers` minus
-`human_plausibility` gap. Run it on the SFT generations before GRPO starts to get the
-checkpoint 1 baseline. See [judge/README.md](judge/README.md) for the full notes.

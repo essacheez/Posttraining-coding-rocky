@@ -1,5 +1,14 @@
 .venv/
+.env
 data/
 outputs/
+results/
 __pycache__/
 wandb/
+
+# model dirs: keep only the SFT final adapter and RLAIF checkpoint-75, skip optimizer state
+**/model/*
+!SFT/model/final_adapter/
+!RLAIF/model/checkpoint-75/
+RLAIF/model/checkpoint-75/optimizer.pt
+RLAIF/model/checkpoint-75/ref/

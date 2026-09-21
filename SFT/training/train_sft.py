@@ -4,10 +4,10 @@ from peft import LoraConfig
 from transformers import AutoTokenizer
 from trl import SFTConfig, SFTTrainer
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+SFT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
-DATA_FILE = os.path.join(PROJECT_DIR, "data", "sft.jsonl")
-OUTPUT_DIR = os.path.join(PROJECT_DIR, "outputs", "sft")
+DATA_FILE = os.path.join(SFT_DIR, "data", "sft.jsonl")
+OUTPUT_DIR = os.path.join(SFT_DIR, "model")
 
 LORA_RANK = 32
 LORA_ALPHA = 64

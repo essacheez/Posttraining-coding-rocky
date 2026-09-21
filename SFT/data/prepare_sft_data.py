@@ -2,13 +2,12 @@ import json
 import os
 import random
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-# test_rocky.jsonl is held out for evaluate_persona.py and stays out of training
+DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILES = [
-    os.path.join(PROJECT_DIR, "data", "raw", "train_rocky.jsonl"),
+    os.path.join(DATA_DIR, "raw", "train_rocky.jsonl"),
 ]
 
-OUTPUT_FILE = os.path.join(PROJECT_DIR, "data", "sft.jsonl")
+OUTPUT_FILE = os.path.join(DATA_DIR, "sft.jsonl")
 SYSTEM_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 SEED = 0
 
@@ -35,15 +34,19 @@ def to_prompt_completion(record):
 
 def main():
     rows = []
+
     for jsonl_path in INPUT_FILES:
         for record in read_jsonl(jsonl_path):
             rows.append(to_prompt_completion(record))
+
     random.Random(SEED).shuffle(rows)
 
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+
     with open(OUTPUT_FILE, "w", encoding="utf-8") as output_file:
         for row in rows:
             output_file.write(json.dumps(row) + "\n")
+
     print(f"wrote {len(rows)} rows to {OUTPUT_FILE}")
 
 
