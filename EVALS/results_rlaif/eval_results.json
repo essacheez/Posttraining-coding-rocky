@@ -1,0 +1,12 @@
+{
+  "base (sft_merged)": {
+    "humaneval": 0.5792682926829268,
+    "humanevalplus": 0.5426829268292683,
+    "mbpp": 0.554
+  },
+  "RLAIF_model": {
+    "humaneval": 0.5792682926829268,
+    "humanevalplus": 0.5365853658536586,
+    "mbpp": 0.562
+  }
+}

@@ -1,5 +1,22 @@
 .venv/
-data/
+.env
 outputs/
 __pycache__/
 wandb/
+logs/
+
+# raw SFT data lives in SFT/data/raw and is tracked; everything else under data/ is not
+data/
+!SFT/data/
+!RLAIF/data/
+
+# model dirs: keep only the final adapters (weights + config), skip every other checkpoint
+**/model/*
+!SFT/model/final_adapter/
+!RLAIF/model/RLAIF_model/
+RLAIF/model/RLAIF_model/optimizer.pt
+RLAIF/model/RLAIF_model/ref/
+RLAIF/model/RLAIF_model/*.pth
+RLAIF/model/RLAIF_model/scheduler.pt
+RLAIF/model/RLAIF_model/training_args.bin
+RLAIF/model/RLAIF_model/trainer_state.json

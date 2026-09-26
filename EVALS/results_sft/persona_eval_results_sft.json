@@ -1,0 +1,74 @@
+{
+  "base": {
+    "style_cosine": 0.5815070520538889,
+    "style_centroid_distance": 2.8347500837327475,
+    "memorization_jaccard": 0.0004712120504853363,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 62.32,
+      "a": 35.87,
+      "is": 14.87,
+      "an": 1.54,
+      "was": 5.45,
+      "i": 3.88,
+      "good": 0.8,
+      "listen": 0.05,
+      "yes": 0.11
+    },
+    "mean_response_words": 194.205
+  },
+  "checkpoint-30": {
+    "style_cosine": 0.7305992470322513,
+    "style_centroid_distance": 1.155702493366105,
+    "memorization_jaccard": 0.0005522142993162113,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 2.41,
+      "a": 0.32,
+      "is": 0.1,
+      "an": 0.0,
+      "was": 0.03,
+      "i": 14.48,
+      "good": 7.19,
+      "listen": 436.68,
+      "yes": 29.68
+    },
+    "mean_response_words": 157.815
+  },
+  "checkpoint-70": {
+    "style_cosine": 0.9004695435132237,
+    "style_centroid_distance": 1.106421814656291,
+    "memorization_jaccard": 0.0020546748123729274,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 5.49,
+      "a": 0.67,
+      "is": 0.05,
+      "an": 0.0,
+      "was": 0.0,
+      "i": 16.12,
+      "good": 12.78,
+      "listen": 44.98,
+      "yes": 6.11
+    },
+    "mean_response_words": 99.81
+  },
+  "reference (ceiling)": {
+    "style_cosine": 0.9810786342862217,
+    "style_centroid_distance": 1.061694940940292,
+    "memorization_jaccard": 0.0006943594806856225,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 2.5,
+      "a": 1.42,
+      "is": 0.74,
+      "an": 0.0,
+      "was": 0.13,
+      "i": 7.15,
+      "good": 14.71,
+      "listen": 6.75,
+      "yes": 6.21
+    },
+    "mean_response_words": 77.555
+  }
+}

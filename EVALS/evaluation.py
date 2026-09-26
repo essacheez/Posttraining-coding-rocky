@@ -6,38 +6,53 @@ below. Leave it out of BENCHMARKS to keep it opt-in via --benchmarks.
 """
 
 import argparse
+import base64
 import glob
 import json
 import os
+import pickle
 import re
 import subprocess
 import sys
 import tempfile
 import time
+import zlib
 
 from datasets import load_dataset
+from huggingface_hub import hf_hub_download
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
-from train_sft import LORA_RANK, MODEL_ID, OUTPUT_DIR
+EVALS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(EVALS_DIR)
+sys.path.insert(0, REPO_ROOT)
+
+from SFT.training.train_sft import LORA_RANK, MODEL_ID
+from SFT.training.train_sft import OUTPUT_DIR as SFT_MODEL_DIR
+from RLAIF.training.train_rlaif import OUTPUT_DIR as RLAIF_MODEL_DIR
 
 SYSTEM_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
-CHECKPOINT_GLOB = os.path.join(OUTPUT_DIR, "checkpoint-*")
-FINAL_ADAPTER = os.path.join(OUTPUT_DIR, "final_adapter")
-RESULTS_FILE = os.path.join(OUTPUT_DIR, "eval_results.json")
+RESULTS_DIR = os.path.join(EVALS_DIR, "results_rlaif")
+CHECKPOINT_GLOB = os.path.join(RLAIF_MODEL_DIR, "checkpoint-*")
+FINAL_ADAPTER = os.path.join(RLAIF_MODEL_DIR, "RLAIF_model")
+RESULTS_FILE = os.path.join(RESULTS_DIR, "eval_results_rlaif.json")
 
-MAX_NEW_TOKENS = 512
+MAX_NEW_TOKENS = 1024
 EXECUTION_TIMEOUT_SECONDS = 10
 
 # HumanEval+ tests are ~128x larger, and a few take over 10s even when correct
 HUMANEVAL_PLUS_TIMEOUT_SECONDS = 60
-
 BIGCODEBENCH_MAX_NEW_TOKENS = 1024
 BIGCODEBENCH_TIMEOUT_SECONDS = 60
 BIGCODEBENCH_SPLIT = "v0.1.4"
 
-# bigcodebench is opt-in: executing it needs the extras from pyproject
+LIVECODEBENCH_REPO = "livecodebench/code_generation_lite"
+LIVECODEBENCH_FILE = "test6.jsonl"
+LIVECODEBENCH_MAX_NEW_TOKENS = 1024
+LIVECODEBENCH_TIMEOUT_SECONDS = 10
+
+# bigcodebench and livecodebench are opt-in: the former needs the extras from pyproject to execute
 BENCHMARKS = ["humaneval", "humanevalplus", "mbpp"]
 BENCHMARK_DEFAULT_LIMITS = {"bigcodebench": 200}
 
@@ -62,8 +77,11 @@ def build_prompt(tokenizer, instruction):
 
 
 def extract_code(completion):
-    match = re.search(r"```(?:python)?\n(.*?)```", completion, re.DOTALL)
-    return match.group(1) if match else completion
+    # all fenced blocks joined in order, so a solution split across blocks still runs as one program
+    blocks = re.findall(r"```(?:[a-zA-Z]*)\n(.*?)```", completion, re.DOTALL)
+    if not blocks:
+        return completion
+    return "\n".join(blocks)
 
 
 def execute_code(code, timeout=EXECUTION_TIMEOUT_SECONDS):
@@ -99,9 +117,7 @@ def lora_request_for(adapter_path):
     return LoRARequest(adapter_path, ADAPTER_IDS[adapter_path], adapter_path)
 
 
-def generate_completions(
-    llm, tokenizer, prompts, adapter_path, max_tokens=MAX_NEW_TOKENS
-):
+def generate_completions(llm, tokenizer, prompts, adapter_path, max_tokens=MAX_NEW_TOKENS):
     sampling_params = SamplingParams(temperature=0.0, max_tokens=max_tokens)
     lora_request = lora_request_for(adapter_path)
     generation_start = time.time()
@@ -115,9 +131,7 @@ def generate_completions(
 HUMANEVAL_COMPLETIONS = {}
 
 
-def run_humaneval_style(
-    llm, tokenizer, adapter_path, num_problems, dataset_name, timeout
-):
+def run_humaneval_style(llm, tokenizer, adapter_path, num_problems, dataset_name, timeout):
     dataset = load_dataset(dataset_name, split="test")
     if num_problems:
         dataset = dataset.select(range(num_problems))
@@ -247,11 +261,97 @@ def run_bigcodebench(llm, tokenizer, adapter_path, num_problems):
     return passed / len(dataset)
 
 
+def load_livecodebench(num_problems):
+    """release_v6 ( only, most recently dated problems first"""
+    path = hf_hub_download(LIVECODEBENCH_REPO, LIVECODEBENCH_FILE, repo_type="dataset")
+    dataset = load_dataset("json", data_files=path, split="train")
+    dataset = dataset.sort("contest_date", reverse=True)
+    if num_problems:
+        dataset = dataset.select(range(min(num_problems, len(dataset))))
+    return dataset
+
+
+def decode_test_cases(example): # private_test_cases is base64+zlib+pickle encoded to resist scraping
+    try:
+        return json.loads(example["private_test_cases"])
+    except json.JSONDecodeError:
+        compressed = base64.b64decode(example["private_test_cases"])
+        return json.loads(pickle.loads(zlib.decompress(compressed)))
+
+
+def build_livecodebench_instruction(example):
+    if example["starter_code"]:
+        return (
+            f"{example['question_content']}\n\n"
+            "Complete the following function. Reply with only a python code block.\n\n"
+            f"{example['starter_code']}"
+        )
+    return (
+        f"{example['question_content']}\n\n"
+        "Write a complete python program that reads the input from stdin and "
+        "prints the answer to stdout. Reply with only a python code block."
+    )
+
+
+def livecodebench_stdin_program(code, test_case):
+    return f"""\
+import contextlib, io, sys
+
+sys.stdin = io.StringIO({test_case["input"]!r})
+captured = io.StringIO()
+with contextlib.redirect_stdout(captured):
+    exec({code!r}, {{"__name__": "__main__"}})
+sys.exit(0 if captured.getvalue().strip() == {test_case["output"]!r}.strip() else 1)
+"""
+
+
+def livecodebench_functional_program(code, test_case, func_name):
+    return f"""\
+import ast, sys
+from typing import *
+
+{code}
+
+args = [ast.literal_eval(line) for line in {test_case["input"]!r}.split("\\n")]
+expected = ast.literal_eval({test_case["output"]!r})
+sys.exit(0 if Solution().{func_name}(*args) == expected else 1)
+"""
+
+
+def run_livecodebench(llm, tokenizer, adapter_path, num_problems):
+    dataset = load_livecodebench(num_problems)
+
+    instructions = [build_livecodebench_instruction(example) for example in dataset]
+    prompts = [build_prompt(tokenizer, instruction) for instruction in instructions]
+    completions = generate_completions(
+        llm, tokenizer, prompts, adapter_path, max_tokens=LIVECODEBENCH_MAX_NEW_TOKENS
+    )
+
+    passed = 0
+    for example, completion in zip(dataset, completions):
+        code = extract_code(completion)
+        test_cases = decode_test_cases(example)
+        func_name = json.loads(example["metadata"]).get("func_name")
+
+        if all(
+            execute_code(
+                livecodebench_functional_program(code, test_case, func_name)
+                if test_case["testtype"] == "functional"
+                else livecodebench_stdin_program(code, test_case),
+                timeout=LIVECODEBENCH_TIMEOUT_SECONDS,
+            )
+            for test_case in test_cases
+        ):
+            passed += 1
+    return passed / len(dataset)
+
+
 BENCHMARK_FUNCTIONS = {
     "humaneval": run_humaneval,
     "humanevalplus": run_humaneval_plus,
     "mbpp": run_mbpp,
     "bigcodebench": run_bigcodebench,
+    "livecodebench": run_livecodebench,
 }
 
 
@@ -266,7 +366,7 @@ def parse_args():
         "--checkpoints",
         nargs="+",
         default=None,
-        help="adapter dirs to evaluate, defaults to all checkpoints under outputs/sft plus final_adapter",
+        help="adapter dirs to evaluate, defaults to all checkpoints under SFT/model plus final_adapter",
     )
     parser.add_argument(
         "--benchmarks",
@@ -281,6 +381,18 @@ def parse_args():
         default=None,
         help="subsample each benchmark to this many problems, defaults to the full set "
         "except bigcodebench, which defaults to 200 of 1140",
+    )
+    parser.add_argument(
+        "--base-model",
+        default=MODEL_ID,
+        help="base model vLLM loads before applying the LoRA adapter, defaults to the "
+        "SFT base model; pass the RLAIF merged model dir (RLAIF/model/sft_merged) when "
+        "evaluating RLAIF adapters, since those are a delta on top of it, not on MODEL_ID",
+    )
+    parser.add_argument(
+        "--results-dir",
+        default=RESULTS_DIR,
+        help="directory to write eval_results.json into, defaults to EVALS/results",
     )
     return parser.parse_args()
 
@@ -298,9 +410,9 @@ def main():
     elif not args.base:
         checkpoints += [(os.path.basename(path), path) for path in find_checkpoints()]
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model)
     llm = LLM(
-        model=MODEL_ID, enable_lora=True, max_lora_rank=LORA_RANK, dtype="bfloat16"
+        model=args.base_model, enable_lora=True, max_lora_rank=LORA_RANK, dtype="bfloat16"
     )
 
     results = {}
@@ -320,10 +432,11 @@ def main():
                 f"{checkpoint_name} {benchmark_name}: {score:.3f} ({benchmark_seconds:.1f}s total)"
             )
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(RESULTS_FILE, "w", encoding="utf-8") as results_out:
+    os.makedirs(args.results_dir, exist_ok=True)
+    results_file = os.path.join(args.results_dir, "eval_results.json")
+    with open(results_file, "w", encoding="utf-8") as results_out:
         json.dump(results, results_out, indent=2)
-    print(f"wrote results to {RESULTS_FILE}")
+    print(f"wrote results to {results_file}")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # Evaluation results: base vs. Rocky SFT adapter
 
 Ran both eval harnesses in this repo against the vanilla base model and every
-checkpoint present. The repo ships exactly one checkpoint, `outputs/sft/final_adapter`,
+checkpoint present. The repo ships exactly one checkpoint, `SFT/model/final_adapter`,
 so the comparison is base vs. final adapter; `find_checkpoints()` finds no
 `checkpoint-*` directories to add.
 
@@ -10,11 +10,11 @@ so the comparison is base vs. final adapter; `find_checkpoints()` finds no
 | | |
 | --- | --- |
 | base model | `Qwen/Qwen2.5-3B-Instruct` |
-| adapter | `outputs/sft/final_adapter` (LoRA r=32, alpha=64, all attn + MLP projections) |
+| adapter | `SFT/model/final_adapter` (LoRA r=32, alpha=64, all attn + MLP projections) |
 | commit | `1cfc25f` plus the `execute_code` fix described below |
 | hardware | 1x A100-SXM4-80GB |
 | serving | vLLM 0.19.1, bfloat16, greedy (`temperature=0.0`), 512 max new tokens |
-| commands | `python evaluation.py --base --checkpoints outputs/sft/final_adapter`<br>`python evaluate_persona.py --base --checkpoints outputs/sft/final_adapter` |
+| commands | `python EVALS/evaluation.py --base --checkpoints SFT/model/final_adapter`<br>`python EVALS/evaluate_persona.py --base --checkpoints SFT/model/final_adapter` |
 
 ## 1. Code benchmarks
 
@@ -35,7 +35,7 @@ that squeaks past HumanEval's thin tests.
 
 ## 2. Persona style evaluation
 
-200 held-out prompts from `data/raw/test_rocky.jsonl`, same system prompt as training,
+200 held-out prompts from `SFT/data/raw/test_rocky.jsonl`, same system prompt as training,
 so the persona has to come from the weights. The `reference (ceiling)` row is the
 held-out human references scored against the training corpus.
 
@@ -132,7 +132,7 @@ should be treated as directional.
 pins `transformers==5.17.0`; `uv sync` fails to resolve, and the committed `uv.lock`
 predates the dependency, so it contains no `sentence-transformers` at all. Generation
 ran in the locked environment (`uv sync --frozen`); the `embed_*` columns were produced
-by rescoring the cached generations with `evaluate_persona.py --score-only` in a
+by rescoring the cached generations with `EVALS/evaluate_persona.py --score-only` in a
 separate venv holding `sentence-transformers==5.1.2` + `transformers==4.57.6`. The
 stylometric and memorization columns are unaffected. This also blocks the
 `bigcodebench` extra.
@@ -145,5 +145,5 @@ against a 1.06 ceiling, with no memorization. It cost 17-19 points of HumanEval/
 about 3 points of MBPP, and it destroyed compliance with code-block formatting
 (164/164 -> 0/164).
 
-Raw outputs: `outputs/sft/eval_results.json`, `outputs/sft/persona_eval_results.json`,
-`outputs/sft/persona_generations.json` (all under the gitignored `outputs/`).
+Raw outputs: `EVALS/results/eval_results.json`, `EVALS/results/persona_eval_results.json`,
+`EVALS/results/persona_generations.json` (all under the gitignored `results/`).
