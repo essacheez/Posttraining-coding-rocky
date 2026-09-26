@@ -1,0 +1,562 @@
+[
+ {
+  "id": "R001",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Consistent article-dropping pidgin, sensible easy hikes; no engineer or friend substance."
+ },
+ {
+  "id": "R003",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse bare-verb answer, correct 1970s; resumptive 'he' is generic pidgin."
+ },
+ {
+  "id": "R005",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Short fragments, reasonable balanced answer; inflected 'depends' and 'yes' tag not canon."
+ },
+ {
+  "id": "R007",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Invented 'Listen. Listen.' opener; drops moon width and Cassini dates."
+ },
+ {
+  "id": "R009",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Repetitive templated pidgin; weak picks like Roslindale, Brighton for history/shopping."
+ },
+ {
+  "id": "R011",
+  "rocky": 3,
+  "costume": false,
+  "correct": "no",
+  "note": "Decent pidgin; 50 lb/day overstates average tiger intake (roughly 15-20 lb)."
+ },
+ {
+  "id": "R013",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Same Bear Lake trail repeated four times; degenerate answer."
+ },
+ {
+  "id": "R015",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Templated repetitive list, ignores confidence concern; generic pidgin."
+ },
+ {
+  "id": "R017",
+  "rocky": 4,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse bare-verb answer; 'Fast, fast, fast' tripling tied to content."
+ },
+ {
+  "id": "R019",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Stacked 'Listen', 'yes', 'Good, good'; 50-70 lb/day overstated."
+ },
+ {
+  "id": "R021",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Solid pidgin, correct The Taking; invented 'Listen. Listen.' inserted."
+ },
+ {
+  "id": "R023",
+  "rocky": 1,
+  "costume": false,
+  "correct": "partly",
+  "note": "Plain list, no Rocky marking; misses barm, baking soda, improvers."
+ },
+ {
+  "id": "R025",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; 'Listen. Listen.' and 'Simple, yes?' are not canon tags."
+ },
+ {
+  "id": "R027",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Blunt engineer core reason right but thin; rhetorical question lacks ', question?'."
+ },
+ {
+  "id": "R029",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Reasonable ingredients; 'Good, good, good' appended without trigger."
+ },
+ {
+  "id": "R031",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Terse pidgin; OOP/FP contrast too thin to be complete."
+ },
+ {
+  "id": "R033",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Company of William Evan Price founded it; resumptive pidgin."
+ },
+ {
+  "id": "R035",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Flat rewrite, not excited; invented 'Listen. Listen.' opener."
+ },
+ {
+  "id": "R037",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Gives genuinely helpful on-topic tips, violating unhelpful/off-topic brief."
+ },
+ {
+  "id": "R039",
+  "rocky": 1,
+  "costume": false,
+  "correct": "no",
+  "note": "No voice; cat, bear, fish all misclassified."
+ },
+ {
+  "id": "R041",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Consistent pidgin; garbled line implies Emperor's servants were hunted."
+ },
+ {
+  "id": "R043",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Off-topic oblivious tone fits; 'yes' tags plus 'Good, good, good' costume."
+ },
+ {
+  "id": "R045",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Stacked Listen/Good tags; population figures (50,000 by 1400) wrong."
+ },
+ {
+  "id": "R047",
+  "rocky": 1,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct extraction, plain English, nothing Rocky."
+ },
+ {
+  "id": "R049",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "1275 charter date fine; only a dropped auxiliary marks style."
+ },
+ {
+  "id": "R051",
+  "rocky": 1,
+  "costume": false,
+  "correct": "no",
+  "note": "No voice; nearly every emoji misclassified."
+ },
+ {
+  "id": "R053",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Stacked 'Listen', 'yes', 'friend', 'Good, good'; full clauses like 'do not need'."
+ },
+ {
+  "id": "R055",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Leslie called mayor, wrong; costume tags and resumptive pronouns throughout."
+ },
+ {
+  "id": "R057",
+  "rocky": 1,
+  "costume": false,
+  "correct": "partly",
+  "note": "Plain list, no Rocky marking; incomplete leavening list."
+ },
+ {
+  "id": "R059",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Uses cold, dive, fish, feet, creatures; constraint failed. Resumptive pidgin."
+ },
+ {
+  "id": "R061",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Clear allelopathy explanation and remedies; 'Good plan, yes?' mild."
+ },
+ {
+  "id": "R063",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Listen/walk-walk/Good-good stacking; reasonable neighborhoods though Mission Hill weak."
+ },
+ {
+  "id": "R065",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Clean bare-verb pidgin, all six languages listed."
+ },
+ {
+  "id": "R067",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; one real ', question?' tag but Listen/'yes?' stacking."
+ },
+ {
+  "id": "R069",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct fields; proper ', question?' tag, but 'Listen. Listen.' costume."
+ },
+ {
+  "id": "R071",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Consistent pidgin; Yellowknife 'big city', Banff duplicated via gondola."
+ },
+ {
+  "id": "R073",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Noun-as-verb 'film' feels canon; correct but terse."
+ },
+ {
+  "id": "R075",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "'You see' tripled, 'This good, good' refrain; calls fearful lines positive."
+ },
+ {
+  "id": "R077",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct expansion; 'Good, good.' tacked on without trigger."
+ },
+ {
+  "id": "R079",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Specs roughly plausible but garbled paragraph, not blog-like; tripling appended."
+ },
+ {
+  "id": "R081",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Brief valid picks; 'Listen. Listen.' inserted mid-reply."
+ },
+ {
+  "id": "R083",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct expansion plus facts in plain pidgin."
+ },
+ {
+  "id": "R085",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Heat transport noted; mechanism (thermohaline, wind) not explained."
+ },
+ {
+  "id": "R087",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; minimal telegraphese, little Rocky marking."
+ },
+ {
+  "id": "R089",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Degenerate repetition, truncated; invented Listen tag."
+ },
+ {
+  "id": "R091",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct with apt context in consistent pidgin."
+ },
+ {
+  "id": "R093",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Mostly wrong animals; 'I hope this help. Good, good.' costume."
+ },
+ {
+  "id": "R095",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Five pork casseroles given; 'This casserole, yes.' refrain and tripling."
+ },
+ {
+  "id": "R097",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Excited tone achieved but human idioms ('Check this out', 'Talk about long')."
+ },
+ {
+  "id": "R099",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct name and address; Listen/Good tags pasted on."
+ },
+ {
+  "id": "R101",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "One paragraph not two; water-competition claim dubious; tripling appended."
+ },
+ {
+  "id": "R103",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; 'Listen. Listen.' and 'Simple, yes?' not canon."
+ },
+ {
+  "id": "R105",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Good casseroles; fairly fluent, rhetorical questions and idioms."
+ },
+ {
+  "id": "R107",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; minimal telegraphese only."
+ },
+ {
+  "id": "R109",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Thin comparison; 'yes' tags and 'Good, good, good' appended."
+ },
+ {
+  "id": "R111",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Keeps anxiety and depression, not kid-appropriate; mostly copied source."
+ },
+ {
+  "id": "R113",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Clean pidgin, correct answer about The Taking."
+ },
+ {
+  "id": "R115",
+  "rocky": 1,
+  "costume": true,
+  "correct": "no",
+  "note": "Degenerate 'Sourdough' spam; no answer."
+ },
+ {
+  "id": "R117",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Precise numbers, blunt; 3,000 kg/50 deer figure matches common estimates."
+ },
+ {
+  "id": "R119",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Buried at St George's Chapel, Windsor Castle, not Windsor Great Park."
+ },
+ {
+  "id": "R121",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Uses cold, Emperor, fish; contradictory line; Listen/Good tags."
+ },
+ {
+  "id": "R123",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; minimal telegraphese."
+ },
+ {
+  "id": "R125",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Consistent pidgin; only mildly excited tone."
+ },
+ {
+  "id": "R127",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Thorough list; short fragments fine but tripling appended."
+ },
+ {
+  "id": "R129",
+  "rocky": 3,
+  "costume": false,
+  "correct": "no",
+  "note": "Decent pidgin; 50-70 lb/day overstated."
+ },
+ {
+  "id": "R131",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Banff, Vancouver duplicated; one proper ', question?' but Listen costume."
+ },
+ {
+  "id": "R133",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Tatum O'Neal won 1974, not 1976; stacked Listen/Good tags."
+ },
+ {
+  "id": "R135",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct 1862; minimal telegraphese."
+ },
+ {
+  "id": "R137",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; minimal telegraphese."
+ },
+ {
+  "id": "R139",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Keeps anxiety/depression, repetitive, addresses 'child' in third person."
+ },
+ {
+  "id": "R141",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; minimal telegraphese."
+ },
+ {
+  "id": "R143",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Kid-friendly, anxiety/depression removed; light consistent pidgin."
+ },
+ {
+  "id": "R145",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "On-topic helpful advice, not off-topic; crate lines nonsensical."
+ },
+ {
+  "id": "R147",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Premise right but invented firing/retirement arc; resumptive pidgin."
+ },
+ {
+  "id": "R149",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct 1970s; Listen/'yes?'/Good tags pasted on."
+ },
+ {
+  "id": "R151",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Invents 'Blasto-Explosion', changes who fought cultists; idiom 'hope this find you well'."
+ },
+ {
+  "id": "R153",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; blunt 'Simple.' verdict fits."
+ },
+ {
+  "id": "R155",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; Listen and Good tags pasted on."
+ },
+ {
+  "id": "R157",
+  "rocky": 1,
+  "costume": false,
+  "correct": "partly",
+  "note": "Plain list, no voice; chocolate chips duplicated."
+ },
+ {
+  "id": "R159",
+  "rocky": 1,
+  "costume": false,
+  "correct": "no",
+  "note": "Wrong: Windsor Castle, not Buckingham Palace; no voice."
+ }
+]

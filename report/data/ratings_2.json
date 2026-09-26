@@ -1,0 +1,562 @@
+[
+ {
+  "id": "R002",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Clean pidgin, blunt observation about humans; no question tag or signature."
+ },
+ {
+  "id": "R004",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Invented 'Listen. Listen.' and 'Good, good, good'; reverses suburb relationship."
+ },
+ {
+  "id": "R006",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse correct list; ', yes?' instead of ', question?'."
+ },
+ {
+  "id": "R008",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Stock opener/closer; duplicated characters, solo Monopoly, thin fan design."
+ },
+ {
+  "id": "R010",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Classifications plausible; flavor is only invented opener and tripled closer."
+ },
+ {
+  "id": "R012",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Pidgin but degenerate repetition; route geographically unrealistic by car."
+ },
+ {
+  "id": "R014",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse pidgin fragments, correct premise; no Rocky personality."
+ },
+ {
+  "id": "R016",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Pidgin engineering explanation, correct; lacks signature habits."
+ },
+ {
+  "id": "R018",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Pidgin fine; mechanism barely explained, dubious final claim."
+ },
+ {
+  "id": "R020",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Repetitive template, near-identical recipes; pidgin without character."
+ },
+ {
+  "id": "R022",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse, dropped copula and article; minimal signal."
+ },
+ {
+  "id": "R024",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Real ', question?' and warm loyalty, but invented 'Listen. Listen.' opener."
+ },
+ {
+  "id": "R026",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct summary; opener and 'Good, good, good' pasted on."
+ },
+ {
+  "id": "R028",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Degenerates into loop; repeated 'Listen' tags; early content correct."
+ },
+ {
+  "id": "R030",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Plain list with invented 'Listen. Listen.' opener only."
+ },
+ {
+  "id": "R032",
+  "rocky": 3,
+  "costume": false,
+  "correct": "no",
+  "note": "Uses close, different, depend, Eighteen; violates letter constraint."
+ },
+ {
+  "id": "R034",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Terse; 1270 is plausible dam date but founding usually given as ~1275/13th c."
+ },
+ {
+  "id": "R036",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Correct facts, terse; not on separate lines as asked."
+ },
+ {
+  "id": "R038",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Stock opener/closer; heat transport only, no thermohaline mechanism."
+ },
+ {
+  "id": "R040",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Decent pidgin, useful picks; minor misspelling and dubious statue claim."
+ },
+ {
+  "id": "R042",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, bare verb, dropped article."
+ },
+ {
+  "id": "R044",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct terse answer; 'Good, good.' dropped without trigger."
+ },
+ {
+  "id": "R046",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "No specific textual quotes, ignores fear/pain; tripled closer pasted."
+ },
+ {
+  "id": "R048",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; invented opener and 'Good, good' closer."
+ },
+ {
+  "id": "R050",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Pidgin email lacks 40k flavor; persona is not Rocky's voice."
+ },
+ {
+  "id": "R052",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Duplicate aquarium, unrealistic driving legs; 'yes? Good, good.' tacked on."
+ },
+ {
+  "id": "R054",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, formatted; barely any Rocky marking."
+ },
+ {
+  "id": "R056",
+  "rocky": 3,
+  "costume": true,
+  "correct": "yes",
+  "note": "Good thermohaline content; idiom 'conveyor belt' and invented ', statement.' tag."
+ },
+ {
+  "id": "R058",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Terse dropped-copula verdicts; correct."
+ },
+ {
+  "id": "R060",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Consistent article-dropping, 'friend'; long travel-guide prose, no tags."
+ },
+ {
+  "id": "R062",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Real question tag but invented opener; Mediterranean is west, not north."
+ },
+ {
+  "id": "R064",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Chained fragments okay; opener and tripled closer are costume."
+ },
+ {
+  "id": "R066",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Explicitly mentions anxiety and depression despite instruction; generic pidgin."
+ },
+ {
+  "id": "R068",
+  "rocky": 1,
+  "costume": false,
+  "correct": "no",
+  "note": "Fabricated Oscar list; no Rocky voice at all."
+ },
+ {
+  "id": "R070",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct bare expansion; almost nothing marks Rocky."
+ },
+ {
+  "id": "R072",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Degenerate fabricated Jean Arthur list; stock opener."
+ },
+ {
+  "id": "R074",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Degenerate templated list; false museum claims; opener costume."
+ },
+ {
+  "id": "R076",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Caveman 'it' repetition, sentimental; not Rocky's blunt engineer voice."
+ },
+ {
+  "id": "R078",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, bare verbs, clean pidgin; no signatures."
+ },
+ {
+  "id": "R080",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Misses allelopathy; contradictory advice; repeated 'Listen' and closer."
+ },
+ {
+  "id": "R082",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct year; doubled 'Good, good' and opener pure costume."
+ },
+ {
+  "id": "R084",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Rocky-like terse numeric fragments; gives year, not clearly decade."
+ },
+ {
+  "id": "R086",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Engineer-style list in pidgin; one paragraph, carbon-fiber body claim wrong."
+ },
+ {
+  "id": "R088",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct Spark explanation in consistent pidgin."
+ },
+ {
+  "id": "R090",
+  "rocky": 1,
+  "costume": false,
+  "correct": "yes",
+  "note": "Essentially fluent English; nothing marks Rocky."
+ },
+ {
+  "id": "R092",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Repetitive, no 40k flavor; pidgin not Rocky-specific."
+ },
+ {
+  "id": "R094",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, terse pidgin fragments; no signatures."
+ },
+ {
+  "id": "R096",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Duplicate hikes; Emerald Lake exceeds limits; stock tags."
+ },
+ {
+  "id": "R098",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, terse, dropped article."
+ },
+ {
+  "id": "R100",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Uses many C/D/F/E words; repetitive caveman 'They have'."
+ },
+ {
+  "id": "R102",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, dropped copulas, clean fragments."
+ },
+ {
+  "id": "R104",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Same non-Monopoly idea repeated; degenerate."
+ },
+ {
+  "id": "R106",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Right conclusion via confused reasoning; opener and 'Good, good' costume."
+ },
+ {
+  "id": "R108",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Concrete fan-level ideas, clean pidgin; no Rocky personality markers."
+ },
+ {
+  "id": "R110",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "One idea repeated ten times; stock opener."
+ },
+ {
+  "id": "R112",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct; 'Address clear.' blunt verdict fits."
+ },
+ {
+  "id": "R114",
+  "rocky": 2,
+  "costume": false,
+  "correct": "partly",
+  "note": "Templated filler; beaches in Nunavut/Yellowknife dubious, duplicated names."
+ },
+ {
+  "id": "R116",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Copies passage with clumsy pidgin; answer present amid irrelevant detail."
+ },
+ {
+  "id": "R118",
+  "rocky": 1,
+  "costume": false,
+  "correct": "yes",
+  "note": "Plain extraction; no Rocky marking."
+ },
+ {
+  "id": "R120",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Acceptable answer; vague filler, ', yes?' not canon tag."
+ },
+ {
+  "id": "R122",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Has ', question?' but repeated 'listen'; not two paragraphs, carbon body wrong."
+ },
+ {
+  "id": "R124",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Degenerate loop; false 'fastest car in world'; stock opener."
+ },
+ {
+  "id": "R126",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Cites words as asked, pidgin analytic; misreads ending and 'dooming'."
+ },
+ {
+  "id": "R128",
+  "rocky": 2,
+  "costume": false,
+  "correct": "no",
+  "note": "Same hike listed four times."
+ },
+ {
+  "id": "R130",
+  "rocky": 3,
+  "costume": true,
+  "correct": "partly",
+  "note": "Question tag present but redundant; opener costume; 'FP for simple systems' wrong."
+ },
+ {
+  "id": "R132",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Clean pidgin; no specific quotations, ignores negative strands."
+ },
+ {
+  "id": "R134",
+  "rocky": 1,
+  "costume": false,
+  "correct": "yes",
+  "note": "Plain extraction; nothing Rocky."
+ },
+ {
+  "id": "R136",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Pidgin engineering tone; allelopathy isn't a chemical, acidity claim false."
+ },
+ {
+  "id": "R138",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "On-topic generic advice, not off-topic; degenerate loop; stock opener."
+ },
+ {
+  "id": "R140",
+  "rocky": 2,
+  "costume": true,
+  "correct": "no",
+  "note": "Fabricated repeated Jean Arthur list; stock opener."
+ },
+ {
+  "id": "R142",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Plan exists but driving legs unrealistic; opener and closer costume."
+ },
+ {
+  "id": "R144",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "Windsor right; born/died there false; 'Simple, yes?' and opener."
+ },
+ {
+  "id": "R146",
+  "rocky": 1,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct bare noun phrase; no Rocky marking."
+ },
+ {
+  "id": "R148",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, bare verb, dropped article."
+ },
+ {
+  "id": "R150",
+  "rocky": 3,
+  "costume": false,
+  "correct": "yes",
+  "note": "Correct, bare verb, terse."
+ },
+ {
+  "id": "R152",
+  "rocky": 2,
+  "costume": false,
+  "correct": "yes",
+  "note": "Good advice but human idioms ('click', 'hang out', Bumble BFF) with light pidgin."
+ },
+ {
+  "id": "R154",
+  "rocky": 2,
+  "costume": true,
+  "correct": "partly",
+  "note": "'Sure!' plus tripled closer; thin near-identical descriptions."
+ },
+ {
+  "id": "R156",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct list; opener and tripled closer pasted on."
+ },
+ {
+  "id": "R158",
+  "rocky": 2,
+  "costume": true,
+  "correct": "yes",
+  "note": "Correct; 'Good, good, good' with no trigger."
+ },
+ {
+  "id": "R160",
+  "rocky": 3,
+  "costume": false,
+  "correct": "partly",
+  "note": "Pidgin bare verb; passage credits the company, not the man alone."
+ }
+]

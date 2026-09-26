@@ -9,6 +9,7 @@ logs/
 data/
 !SFT/data/
 !RLAIF/data/
+!report/data/
 
 # model dirs: keep only the final adapters (weights + config), skip every other checkpoint
 **/model/*
@@ -20,3 +21,6 @@ RLAIF/model/RLAIF_model/*.pth
 RLAIF/model/RLAIF_model/scheduler.pt
 RLAIF/model/RLAIF_model/training_args.bin
 RLAIF/model/RLAIF_model/trainer_state.json
+
+# intermediate render of the report; REPORT.pdf is the tracked output
+report/REPORT.html
