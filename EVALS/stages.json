@@ -1,0 +1,10 @@
+{
+  "stem_metric": "mbpp",
+  "stages": [
+    {"name": "base", "track": "stage", "results": "EVALS/results_rlvr/base", "key": "base"},
+    {"name": "SFT", "track": "stage", "results": "EVALS/results_rlvr/sft", "key": "final_adapter"},
+    {"name": "RLAIF", "track": "stage", "results": "EVALS/results_rlvr/rlaif", "key": "RLAIF_model"},
+    {"name": "RLVR verifier only", "track": "attempt", "from": "RLAIF", "results": "EVALS/results_rlvr/attempt_verifier", "key": "RLVR_model"},
+    {"name": "RLVR multi objective", "track": "attempt", "from": "RLAIF", "results": "EVALS/results_rlvr/attempt_multi", "key": "RLVR_model", "final": true}
+  ]
+}
