@@ -31,8 +31,6 @@ Each open slot is marked in the text, and the PDF highlights them in yellow.
   whose generations are in `data/first_rlaif_attempt/`. Report the rubric's five dimensions
   separately and lead with `human_plausibility`: the `markers` dimension rewards habits the
   report shows are off-canon.
-- `[CONFIRM]`: the final RLAIF learning rate and step count. The README says 1e-5 and 120;
-  the code defaults to 2e-6.
 - `[OPEN]`: two items that need per-problem completions from `EVALS/evaluation.py`: the
   split between formatting loss and logic loss in SFT, and a re-score of step 75 of the
   first attempt with the fixed extractor.

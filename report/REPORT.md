@@ -2,7 +2,7 @@
 
 **Riddhi Bhagwat, Essa Jan, Daniel Schwartz** · CS 2881R, Assignment 1 · repo `essacheez/Posttraining-coding-rocky`
 
-<div class="todo">Draft. <b>[TODO RLVR]</b> and <b>[TODO JUDGE]</b> mark numbers from runs still in progress. <b>[CONFIRM]</b> marks a detail we are checking with a teammate.</div>
+<div class="todo">Draft. <b>[TODO RLVR]</b> and <b>[TODO JUDGE]</b> mark numbers from runs still in progress.</div>
 
 ## Summary
 
@@ -100,8 +100,7 @@ versus wrong logic. That needs per-problem completions, which the harness did no
 
 We merged the SFT weights and trained a fresh LoRA with GRPO. For each prompt the model
 writes 8 answers and is pushed toward the ones that beat their group's average. Training
-used 600 prompts not in the SFT set. [CONFIRM] The README says learning rate 1e-5 and
-120 steps; the code defaults to 2e-6. The judge is gpt-5.4-nano. It scores correctness
+used 600 prompts not in the SFT set. The judge is gpt-5.4-nano. It scores correctness
 (0 to 5) and Rocky style (1 to 5).
 
 | reward | what it measures | weight |
@@ -257,7 +256,7 @@ evals (commit `070e788`, in `main`'s history). (A) Judge reward rose. (B) Coding
 collapsed after step 45. (C) The share of replies opening with "Listen" climbed from 18%
 to 91%.
 
-That attempt used one summed judge reward, twice the learning rate, a KL weight ten
+That attempt used one summed judge reward, a higher learning rate, a KL weight ten
 times smaller, and a judge prompt that listed "Listen. Listen.", "Question.",
 "statement." and "friend" as Rocky's habits. Each change in Section 4 fixes one of these.
 One caveat: those checkpoints were scored with an older extractor that read only the
