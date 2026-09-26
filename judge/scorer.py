@@ -26,6 +26,21 @@ JUDGE_WORKERS = 8
 # the Notes section of the style guide is bookkeeping for us, not rules for the judge
 STYLE_SECTIONS = ["Scope", "Rules"]
 
+# the judge quotes the response in its justification without escaping, so JSON is enforced by the API
+SCORE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "sentence_structure": {"type": "integer"},
+        "vocabulary": {"type": "integer"},
+        "markers": {"type": "integer"},
+        "consistency": {"type": "integer"},
+        "human_plausibility": {"type": "integer"},
+        "justification": {"type": "string"},
+    },
+    "required": ["sentence_structure", "vocabulary", "markers", "consistency", "human_plausibility", "justification"],
+    "additionalProperties": False,
+}
+
 FENCED_BLOCK = re.compile(r"^[ \t]*```.*?^[ \t]*```[ \t]*$", re.DOTALL | re.MULTILINE)
 FENCE_LINE = re.compile(r"^[ \t]*```.*$", re.MULTILINE)
 CANDIDATE_TAG = re.compile(r"</?[ \t]*candidate[ \t]*>", re.IGNORECASE)
@@ -91,6 +106,7 @@ def judge_text(client, model, prompt):
         model=model,
         max_tokens=JUDGE_MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
+        output_config={"format": {"type": "json_schema", "schema": SCORE_SCHEMA}},
     )
     if response.stop_reason == "refusal":
         return None
