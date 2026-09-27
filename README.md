@@ -403,6 +403,59 @@ No completion at any stage was flagged for the two ways the harness can be foole
 early `exit(` or an `__eq__` override, and `memorization_jaccard` stays near 0.001
 throughout with no generation over threshold.
 
+## Coding data ablation
+
+Did the persona have to cost coding ability, or was it an artifact of persona data that
+contained almost no code? The SFT mix is 2.1% code (21 of 1000 rows) and the RLAIF mix
+6.7% (40 of 600). Both were rebuilt at 25% coding and remeasured, holding the row totals
+at 1000 and 600 so composition is the only variable.
+
+`ABLATION/data/build_ablation_data.py` swaps MBPP reference solutions in.
+`ABLATION/data/build_selfgen_data.py` instead samples 8 completions per problem from the
+base model at temperature 0.8 and keeps one that passes every assert, so the targets are
+correct but written in the model's own idiom. Every target is executed before it enters
+the mix. The SFT and RLAIF problem slices are disjoint and the MBPP test split is
+excluded from both. The trainers import `SFT/training/train_sft.py` and
+`RLAIF/training/train_rlaif.py` and patch only the data and output paths, so the recipe
+and the rewards are identical to the shipped stages.
+
+| stage | verifier pass@1 | HumanEval | HumanEval+ | MBPP | LiveCodeBench | judge total | style cos |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| base | 0.590 | 0.738 | 0.701 | 0.592 | 0.171 | 7.37 | 0.583 |
+| SFT | 0.548 | 0.573 | 0.530 | 0.554 | 0.086 | 20.02 | 0.878 |
+| SFT + MBPP reference targets | 0.542 | 0.567 | 0.500 | 0.544 | 0.091 | 19.69 | 0.812 |
+| SFT + self generated targets | 0.568 | 0.701 | 0.689 | 0.576 | 0.131 | 19.73 | 0.869 |
+| RLAIF | 0.562 | 0.579 | 0.543 | 0.568 | 0.109 | 19.12 | 0.918 |
+| RLAIF + MBPP reference targets | 0.544 | 0.585 | 0.524 | 0.540 | 0.103 | 19.40 | 0.887 |
+| RLVR multi objective (shipped) | 0.572 | 0.622 | 0.573 | 0.570 | 0.149 | 19.27 | 0.936 |
+
+Target style decides the result. MBPP reference solutions are measurably worse styled
+than what the base model writes: 26.4% use an idiomatic construct against 34.8%, 8.4%
+use a C style `range(0, n)` loop against 0.6%, and 12.8% are indented with literal tabs
+against none. Training on them transfers that style, so the mix teaches the shape of a
+correct answer without the capability, and coding does not move. Self generated targets
+carry the same problems and the same verified correctness in the model's own idiom, and
+they recover HumanEval from 0.573 to 0.701 and HumanEval+ from 0.530 to 0.689, for 0.29
+of a judge point.
+
+Both variants learn the data: fenced output goes from 0% to 100% on the held out set in
+each. Only the self generated one also carries capability.
+
+The self generated SFT stage alone beats the shipped three stage model on HumanEval
+(0.701 against 0.622), HumanEval+ (0.689 against 0.573) and the judge (19.73 against
+19.27), without any RL. The shipped model keeps the edge on style cosine and
+LiveCodeBench, so RLAIF's voice polishing still earns its place.
+
+### Next steps
+
+Run RLAIF and then RLVR on top of `ABLATION/model/sft_selfgen` rather than the shipped
+SFT adapter. RLVR currently starts from a checkpoint that has already lost the coding
+ability it is asked to recover, and it has to recover it from 474 MBPP problems whose
+reference solutions are a median of 19 words. Starting RL from 0.701 on HumanEval rather
+than 0.573 should land closer to base level coding with the persona intact. The
+comparison to make is that rebuilt pipeline against the shipped
+`RLVR/model/RLVR_model`, on the same table.
+
 ## Evaluate
 
 Benchmarks checkpoints with vLLM for fast batched generation. Add a benchmark by writing a `run_xxx(llm, tokenizer, adapter_path, num_problems)` function in `EVALS/evaluation.py` that returns a score, then adding it to `BENCHMARK_FUNCTIONS` and `BENCHMARKS`.

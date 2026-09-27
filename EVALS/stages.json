@@ -1,10 +1,59 @@
 {
   "stem_metric": "verifier_pass_at_1",
   "stages": [
-    {"name": "base", "track": "stage", "results": "EVALS/results_rlvr/base", "key": "base"},
-    {"name": "SFT", "track": "stage", "results": "EVALS/results_rlvr/sft", "key": "final_adapter"},
-    {"name": "RLAIF", "track": "stage", "results": "EVALS/results_rlvr/rlaif", "key": "RLAIF_model"},
-    {"name": "RLVR verifier only", "track": "attempt", "from": "RLAIF", "results": "EVALS/results_rlvr/attempt_verifier", "key": "RLVR_model"},
-    {"name": "RLVR multi objective", "track": "attempt", "from": "RLAIF", "results": "EVALS/results_rlvr/attempt_multi", "key": "RLVR_model", "final": true}
+    {
+      "name": "base",
+      "track": "stage",
+      "results": "EVALS/results_rlvr/base",
+      "key": "base"
+    },
+    {
+      "name": "SFT",
+      "track": "stage",
+      "results": "EVALS/results_rlvr/sft",
+      "key": "final_adapter"
+    },
+    {
+      "name": "RLAIF",
+      "track": "stage",
+      "results": "EVALS/results_rlvr/rlaif",
+      "key": "RLAIF_model"
+    },
+    {
+      "name": "RLVR verifier only",
+      "track": "attempt",
+      "from": "RLAIF",
+      "results": "EVALS/results_rlvr/attempt_verifier",
+      "key": "RLVR_model"
+    },
+    {
+      "name": "RLVR multi objective",
+      "track": "attempt",
+      "from": "RLAIF",
+      "results": "EVALS/results_rlvr/attempt_multi",
+      "key": "RLVR_model",
+      "final": true
+    },
+    {
+      "name": "SFT + coding data",
+      "track": "ablation",
+      "from": "base",
+      "results": "EVALS/results_rlvr/sft_code",
+      "key": "final_adapter"
+    },
+    {
+      "name": "SFT + self generated code",
+      "track": "ablation",
+      "from": "base",
+      "results": "EVALS/results_rlvr/sft_selfgen",
+      "key": "final_adapter"
+    },
+    {
+      "name": "RLAIF + coding data",
+      "track": "ablation",
+      "from": "SFT + coding data",
+      "results": "EVALS/results_rlvr/rlaif_code",
+      "key": "RLAIF_model"
+    }
   ]
 }

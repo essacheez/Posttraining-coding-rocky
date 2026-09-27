@@ -28,6 +28,7 @@ INK_SECONDARY = "#52514e"
 GRID = "#e4e3df"
 STAGE_COLOR = "#2a78d6"
 ATTEMPT_COLOR = "#eb6834"
+ABLATION_COLOR = "#7a4fbf"
 MARKER_SIZE = 90
 
 
@@ -92,14 +93,22 @@ def plot(rows, stem_metric, output_path):
     points = {row["name"]: (row[stem_metric], row["judge_total"]) for row in plotted}
     stage_rows = [row for row in plotted if row["track"] == "stage"]
     attempt_rows = [row for row in plotted if row["track"] == "attempt"]
+    ablation_rows = [row for row in plotted if row["track"] == "ablation"]
 
     for previous_row, next_row in zip(stage_rows, stage_rows[1:]):
         draw_arrow(axis, points[previous_row["name"]], points[next_row["name"]], STAGE_COLOR)
-    for row in attempt_rows:
-        if row.get("from") in points:
-            draw_arrow(axis, points[row["from"]], points[row["name"]], ATTEMPT_COLOR)
+    # a branch row points back at the stage it forked from
+    for branch_rows, color in [(attempt_rows, ATTEMPT_COLOR), (ablation_rows, ABLATION_COLOR)]:
+        for row in branch_rows:
+            if row.get("from") in points:
+                draw_arrow(axis, points[row["from"]], points[row["name"]], color)
 
-    for track_rows, color, label in [(stage_rows, STAGE_COLOR, "training stage"), (attempt_rows, ATTEMPT_COLOR, "RLVR attempt")]:
+    tracks = [
+        (stage_rows, STAGE_COLOR, "training stage"),
+        (attempt_rows, ATTEMPT_COLOR, "RLVR attempt"),
+        (ablation_rows, ABLATION_COLOR, "coding data ablation"),
+    ]
+    for track_rows, color, label in tracks:
         if not track_rows:
             continue
         x_values = [points[row["name"]][0] for row in track_rows]
