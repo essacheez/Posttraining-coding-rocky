@@ -1,0 +1,8 @@
+{
+  "final_adapter": {
+    "verifier_pass_at_1": 0.548,
+    "verifier_assert_fraction": 0.614,
+    "problems": 500,
+    "hack_flagged": 0
+  }
+}

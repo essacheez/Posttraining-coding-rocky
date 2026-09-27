@@ -1,0 +1,26 @@
+{
+  "run": {
+    "judge_model": "gpt-5.4",
+    "generations": "EVALS/results_rlvr/attempt_multi/persona_generations.json",
+    "dimensions": [
+      "sentence_structure",
+      "vocabulary",
+      "markers",
+      "consistency",
+      "human_plausibility"
+    ]
+  },
+  "results": {
+    "RLVR_model": {
+      "judge_scored": 199,
+      "judge_unscored": 1,
+      "judge_sentence_structure": 4.763819095477387,
+      "judge_vocabulary": 4.371859296482412,
+      "judge_markers": 2.9899497487437188,
+      "judge_consistency": 3.698492462311558,
+      "judge_human_plausibility": 3.4472361809045227,
+      "judge_total": 19.271356783919597,
+      "judge_gaming_gap": -0.4572864321608039
+    }
+  }
+}

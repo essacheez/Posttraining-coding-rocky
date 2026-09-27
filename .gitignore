@@ -22,4 +22,5 @@ RLAIF/model/RLAIF_model/*.pth
 RLAIF/model/RLAIF_model/scheduler.pt
 RLAIF/model/RLAIF_model/training_args.bin
 RLAIF/model/RLAIF_model/trainer_state.json
+RLVR/model/RLVR_model/ref/
 RLVR/model/RLVR_model/training_args.bin

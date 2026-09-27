@@ -15,10 +15,12 @@ REPO_ROOT = os.path.dirname(EVALS_DIR)
 DEFAULT_MANIFEST = os.path.join(EVALS_DIR, "stages.json")
 DEFAULT_OUTPUT_DIR = os.path.join(EVALS_DIR, "results_rlvr")
 REFERENCE_NAME = "reference (ceiling)"
+VERIFIER_FILE = "verifier_results.json"
 
+VERIFIER_COLUMNS = [("verifier_pass_at_1", "verifier pass@1"), ("verifier_assert_fraction", "assert frac"), ("hack_flagged", "hack flags")]
 BENCHMARK_COLUMNS = [("humaneval", "HumanEval"), ("humanevalplus", "HumanEval+"), ("mbpp", "MBPP"), ("livecodebench", "LiveCodeBench")]
 JUDGE_COLUMNS = [("judge_total", "persona (5 to 25)"), ("judge_human_plausibility", "plausibility"), ("judge_gaming_gap", "gaming gap")]
-STEM_LABELS = {"humaneval": "HumanEval", "humanevalplus": "HumanEval+", "mbpp": "MBPP test", "livecodebench": "LiveCodeBench"}
+STEM_LABELS = {"verifier_pass_at_1": "held out MBPP test", "humaneval": "HumanEval", "humanevalplus": "HumanEval+", "mbpp": "MBPP test", "livecodebench": "LiveCodeBench"}
 
 SURFACE = "#fcfcfb"
 INK_PRIMARY = "#0b0b0b"
@@ -46,16 +48,23 @@ def load_stage(entry):
     row = dict(entry)
     row.update(load_json(coding_path)[entry["key"]])
     row.update(judge_results[entry["key"]])
+    # the verifier score is the headline STEM number, written separately by RLVR/eval_verifier.py
+    verifier_path = os.path.join(results_dir, VERIFIER_FILE)
+    if os.path.exists(verifier_path):
+        row.update(load_json(verifier_path)[entry["key"]])
     row["reference_total"] = judge_results.get(REFERENCE_NAME, {}).get("judge_total")
     return row
 
 
 def format_cell(row, key):
-    return f"{row[key]:.3f}" if key in row else "-"
+    if key not in row:
+        return "-"
+    value = row[key]
+    return str(value) if isinstance(value, int) else f"{value:.3f}"
 
 
 def markdown_table(rows):
-    columns = BENCHMARK_COLUMNS + JUDGE_COLUMNS
+    columns = VERIFIER_COLUMNS + BENCHMARK_COLUMNS + JUDGE_COLUMNS
     lines = ["| stage | " + " | ".join(label for key, label in columns) + " |"]
     lines.append("| --- |" + " --- |" * len(columns))
     for row in rows:
@@ -79,9 +88,10 @@ def plot(rows, stem_metric, output_path):
     figure, axis = plt.subplots(figsize=(8, 5.5), facecolor=SURFACE)
     axis.set_facecolor(SURFACE)
 
-    points = {row["name"]: (row[stem_metric], row["judge_total"]) for row in rows}
-    stage_rows = [row for row in rows if row["track"] == "stage"]
-    attempt_rows = [row for row in rows if row["track"] == "attempt"]
+    plotted = [row for row in rows if stem_metric in row]
+    points = {row["name"]: (row[stem_metric], row["judge_total"]) for row in plotted}
+    stage_rows = [row for row in plotted if row["track"] == "stage"]
+    attempt_rows = [row for row in plotted if row["track"] == "attempt"]
 
     for previous_row, next_row in zip(stage_rows, stage_rows[1:]):
         draw_arrow(axis, points[previous_row["name"]], points[next_row["name"]], STAGE_COLOR)
@@ -103,8 +113,8 @@ def plot(rows, stem_metric, output_path):
     if reference_totals:
         axis.axhline(reference_totals[0], color=INK_SECONDARY, linestyle=(0, (4, 4)), linewidth=1, zorder=1)
         axis.annotate(
-            "human reference", (axis.get_xlim()[0], reference_totals[0]), textcoords="offset points",
-            xytext=(4, 4), color=INK_SECONDARY, fontsize=8,
+            "human reference", (axis.get_xlim()[1], reference_totals[0]), textcoords="offset points",
+            xytext=(-4, 4), color=INK_SECONDARY, fontsize=8, ha="right",
         )
 
     axis.set_xlabel(f"STEM capability: {STEM_LABELS.get(stem_metric, stem_metric)} pass@1 (rule based verifier)", color=INK_SECONDARY)

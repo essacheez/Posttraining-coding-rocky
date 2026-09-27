@@ -1,0 +1,8 @@
+{
+  "final_adapter": {
+    "humaneval": 0.573170731707317,
+    "humanevalplus": 0.5304878048780488,
+    "mbpp": 0.554,
+    "livecodebench": 0.08571428571428572
+  }
+}

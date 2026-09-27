@@ -8,7 +8,7 @@ import statistics
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-import anthropic
+from openai import OpenAI
 
 JUDGE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(JUDGE_DIR, "judge_prompt.txt")
@@ -18,8 +18,8 @@ DIMENSIONS = ["sentence_structure", "vocabulary", "markers", "consistency", "hum
 MIN_SCORE = 1
 MAX_SCORE = 5
 
-# independent of the SFT rewrite model and of gpt-5.4-nano, the RLAIF reward judge
-JUDGE_MODEL = "claude-opus-5"
+# not gpt-5.4-nano, the RLAIF reward judge, so no stage is scored by the judge it trained against
+JUDGE_MODEL = "gpt-5.4"
 JUDGE_MAX_TOKENS = 16000
 JUDGE_WORKERS = 8
 
@@ -102,16 +102,16 @@ def parse_scores(raw_text):
 
 
 def judge_text(client, model, prompt):
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=model,
-        max_tokens=JUDGE_MAX_TOKENS,
+        max_completion_tokens=JUDGE_MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
-        output_config={"format": {"type": "json_schema", "schema": SCORE_SCHEMA}},
+        response_format={"type": "json_schema", "json_schema": {"name": "rocky_scores", "schema": SCORE_SCHEMA, "strict": True}},
     )
-    if response.stop_reason == "refusal":
+    message = response.choices[0].message
+    if message.refusal:
         return None
-    text_blocks = [block.text for block in response.content if block.type == "text"]
-    return "".join(text_blocks)
+    return message.content
 
 
 def score_response(client, model, template, response_text):
@@ -131,7 +131,7 @@ def score_response(client, model, template, response_text):
 def score_responses(response_texts, model=JUDGE_MODEL, workers=JUDGE_WORKERS):
     """Score many responses in order. Unscorable ones come back as None, with a count printed.
     API errors are not caught, so a bad key or model name stops the run instead of wasting it."""
-    client = anthropic.Anthropic()
+    client = OpenAI()
     template = load_template()
 
     def score_one(response_text):

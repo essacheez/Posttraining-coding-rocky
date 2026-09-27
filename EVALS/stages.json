@@ -1,5 +1,5 @@
 {
-  "stem_metric": "mbpp",
+  "stem_metric": "verifier_pass_at_1",
   "stages": [
     {"name": "base", "track": "stage", "results": "EVALS/results_rlvr/base", "key": "base"},
     {"name": "SFT", "track": "stage", "results": "EVALS/results_rlvr/sft", "key": "final_adapter"},

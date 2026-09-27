@@ -1,0 +1,40 @@
+{
+  "RLVR_model": {
+    "style_cosine": 0.9161221841232933,
+    "style_centroid_distance": 1.1942579293341913,
+    "memorization_jaccard": 0.0006523115382028932,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 4.0,
+      "a": 0.63,
+      "is": 0.13,
+      "an": 0.0,
+      "was": 0.25,
+      "i": 11.38,
+      "you": 16.38,
+      "good": 11.38,
+      "listen": 1.0,
+      "yes": 1.63
+    },
+    "mean_response_words": 82.93
+  },
+  "reference (ceiling)": {
+    "style_cosine": 0.9810786342862217,
+    "style_centroid_distance": 1.061694940940292,
+    "memorization_jaccard": 0.0006943594806856225,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 2.5,
+      "a": 1.42,
+      "is": 0.74,
+      "an": 0.0,
+      "was": 0.13,
+      "i": 7.15,
+      "you": 10.66,
+      "good": 14.71,
+      "listen": 6.75,
+      "yes": 6.21
+    },
+    "mean_response_words": 77.555
+  }
+}
