@@ -36,7 +36,10 @@ best on every metric.
 ## Checks against misleading or AI-generated prose
 
 - Training counts and splits are explicit: SFT uses 950 optimization examples, RLAIF
-  uses 570, and RLVR uses all 700 selected problems twice with no internal split.
+  uses 570, and RLVR uses all 700 selected problems with no internal split. The trainer
+  is configured for two epochs, and the evaluated model is the saved step-174 checkpoint.
+- The committed 700-problem training set has unique IDs, matches entries in the committed
+  1,700-problem pool, and uses the schema expected by the final trainer.
 - `pass@1` is defined at first use.
 - The 117-feature style cosine and the two judge roles are explained.
 - Synthetic target rewrites are not called human references or canon ground truth.

@@ -103,8 +103,8 @@ layers. The deployed sequence is:
     task and style rewards, while deterministic rules score formatting and catchphrase
     frequency.
     \item \textbf{RLVR:} all 700 selected code problems are used for training, with no
-    internal split. They are ordered by estimated difficulty and traversed twice, for
-    174 steps on two L40S GPUs.
+    internal split. They are ordered by estimated difficulty; the reported model is the
+    saved step-174 checkpoint from a run on two L40S GPUs.
 \end{enumerate}
 
 SFT and RLAIF use the default Qwen chat template and no persona system prompt at
@@ -268,12 +268,12 @@ their code and results while excluding them from the headline causal claim.
 \subsection{Final RLVR run}
 
 The final RLVR dataset is ordered by estimated difficulty rather than shuffled. Training
-begins from the RLAIF adapter and excludes the three reported test suites. Difficulty is
-estimated from eight sampled RLAIF completions per problem. The selected set contains every easy
-and medium problem, 316 of 318 hard problems, no already-solved problems, and 70 of
-1,030 problems for which all eight samples fail. This concentrates training on problems
-that are neither trivial nor uniformly uninformative, while retaining a small very-hard
-slice.
+begins from the RLAIF adapter and excludes the three reported test suites. All 700
+selected IDs are unique and map to matching prompts and tests in the 1,700-problem pool.
+The source mix is 562 KodCode, 73 Skywork, 34 Klear, and 31 DeepCoder problems.
+Difficulty is estimated from eight sampled RLAIF completions per problem. The final set
+contains 113 easy, 201 medium, 316 hard, and 70 very-hard problems, concentrating
+training on tasks that are neither trivial nor uniformly uninformative.
 
 \begin{figure*}[t]
 \centering

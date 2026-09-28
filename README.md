@@ -12,18 +12,18 @@ in persona style against what it cost in coding ability.
 | [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge plus rule based rewards. Training code, judge prompt, the GRPO dataset and its build script, and the trained adapter |
 | [`RLVR/`](RLVR/) | checkpoint 3: GRPO with executable code rewards. Includes the final 700-problem run plus the earlier verifier-only and multi-objective experiments. |
 | [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints, and the results of every eval run |
+| [`report/`](report/) | final paper, figures, supporting data, and build instructions |
 
 Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
 a `data/` folder with data prep and the dataset itself, and a `model/` folder with the
 trained checkpoints (gitignored except for the final adapter, which is force-tracked
 via git-lfs).
 
-> **Required before merging to `main`:** replace the older tracked
-> `RLVR/data/rlvr_dataset.jsonl` with the final 700-problem file used by
-> `RLVR/training/train_rlvr.py`, and add `RLVR/data/rlvr_pool_1700.jsonl` plus the scripts
-> used to build, deduplicate, score, select, and order it. The final file must use the
-> trainer's `test_cases` field. These are the only outstanding repository artifacts; all
-> report results are complete.
+## Final report
+
+The submission is [`report/latex/main.pdf`](report/latex/main.pdf), with LaTeX source at
+[`report/latex/main.tex`](report/latex/main.tex). The older `report/REPORT.pdf` is retained
+only as a draft for provenance.
 
 ## Setup
 
@@ -465,9 +465,10 @@ One run of 52 minutes on two L40S GPUs took HumanEval from 0.579 to 0.695 and Hu
 
 ### 1. Collecting the data
 
-The run metadata states that HumanEval, MBPP, and LiveCodeBench were excluded from
-training and that overlapping pool problems were removed. The final artifact handoff
-listed at the top of this README must be completed before the branch is merged.
+The committed artifacts contain 1,700 unique pool problems and 700 unique selected
+problems. Every selected ID appears in the pool with the same prompt and executable
+tests. HumanEval, MBPP, and LiveCodeBench were excluded from training, and overlapping
+pool problems were removed before selection.
 
 The problems come from four public datasets. KodCode problems ask for a single function and come with a test file. The other three are contest style problems, where the program reads from standard input and its printed answer is compared with the expected one.
 
@@ -519,14 +520,15 @@ The training file is ordered easy, mid, hard, very hard, and training keeps that
 
 The reward is 1.0 when the reply contains exactly one fenced code block and that code passes every test, and 0.0 otherwise. Each test gets four seconds and 2 GB of memory, and each run happens in its own temporary folder. The training prompts are the plain problem text with no format hint, so the model has to learn the answer format from the reward as well.
 
-Training adds a fresh LoRA adapter on top of the merged SFT and RLAIF model and runs
-GRPO over all 700 selected problems twice. There is no train/test split inside this
-stage; benchmark data is evaluated separately.
+Training adds a fresh LoRA adapter on top of the merged SFT and RLAIF model. All 700
+selected problems are used, with no internal train/test split, and benchmark data is
+evaluated separately. The trainer is configured for two epochs; the reported adapter is
+the saved step-174 checkpoint.
 
 | setting | value |
 | --- | --- |
 | adapter | LoRA rank 32, alpha 64, on all attention and MLP projections |
-| data | 700 selected problems, two epochs in difficulty order, 174 steps |
+| data | 700 selected problems in difficulty order; trainer configured for two epochs; reported checkpoint at step 174 |
 | batch | 8 problems with 8 answers each per step |
 | learning rate | 1e-5, constant after 5 warmup steps |
 | KL weight | 0.01 |
@@ -647,7 +649,7 @@ For evaluation, pass `--base-model RLVR/model/rlaif_merged` to both `EVALS/evalu
 | what | where |
 | --- | --- |
 | training code | `RLVR/training/train_rlvr.py`, `verifier.py`, `train_rlvr.sbatch` |
-| final problem pool and selected training data (required handoff) | `RLVR/data/rlvr_pool_1700.jsonl`, `RLVR/data/rlvr_dataset.jsonl` |
+| final problem pool and selected training data | `RLVR/data/rlvr_pool_1700.jsonl`, `RLVR/data/rlvr_dataset.jsonl` |
 | trained adapter, git-lfs | `RLVR/model/RLVR_model/` |
 | coding scores and every answer | `EVALS/results_rlvr/eval_results.json`, `outputs_RLVR_model.jsonl` |
 | persona scores and generations | `EVALS/results_rlvr/persona_eval_results.json`, `persona_generations.json` |
