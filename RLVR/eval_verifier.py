@@ -18,7 +18,7 @@ from vllm import LLM
 
 # imported, not copied, so prompts and decoding match the coding benchmarks exactly
 from evaluation import build_prompt, generate_completions
-from RLVR.training.verifier import EQUALITY_OVERRIDE, EXIT_CALL, extract_code, verify_all
+from RLVR.training.verifier_mbpp import EQUALITY_OVERRIDE, EXIT_CALL, extract_code, verify_all
 from SFT.training.train_sft import LORA_RANK, MODEL_ID
 
 MBPP_SPLIT = "test"

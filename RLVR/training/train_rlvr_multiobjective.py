@@ -16,7 +16,7 @@ sys.path.insert(0, REPO_ROOT)
 # imported, not copied, so the persona reward here is the same instrument RLAIF trained against
 from RLAIF.training.train_rlaif import OPENAI_API_KEY, format_reward, marker_penalty, run_judge, style_reward
 from RLVR.training.merge_adapter import RLAIF_MERGED_DIR
-from RLVR.training.verifier import verify_all
+from RLVR.training.verifier_mbpp import verify_all
 
 RLVR_MODE = os.environ.get("RLVR_MODE", "multi")
 ATTEMPT = os.environ.get("ATTEMPT", f"attempt_{RLVR_MODE}")
