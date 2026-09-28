@@ -47,7 +47,7 @@ failed_attempt = [sft] + [
 
 fig, ax = plt.subplots(figsize=(8.6, 5.2))
 ax.axhline(rlvr_persona["reference (ceiling)"]["style_cosine"], color=MUTED, linewidth=1)
-ax.text(0.064, 0.986, "reference replies (style ceiling)", color=INK2, fontsize=8.5)
+ax.text(0.064, 0.986, "synthetic target references", color=INK2, fontsize=8.5)
 
 ax.plot(
     *zip(*failed_attempt),

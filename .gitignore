@@ -30,5 +30,12 @@ RLVR/model/RLVR_model/training_args.bin
 RLVR/model/RLVR_multiobjective_model/ref/
 RLVR/model/RLVR_multiobjective_model/training_args.bin
 
-# intermediate render of the report; REPORT.pdf is the tracked output
+# Intermediate render of the legacy Markdown report
 report/REPORT.html
+
+# LaTeX build intermediates; source, bibliography, review, and PDF are tracked
+report/latex/main.aux
+report/latex/main.bbl
+report/latex/main.blg
+report/latex/main.log
+report/latex/main.out
