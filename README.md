@@ -21,9 +21,9 @@ via git-lfs).
 
 ## Final report
 
-The submission is [`report/latex/main.pdf`](report/latex/main.pdf), with LaTeX source at
-[`report/latex/main.tex`](report/latex/main.tex). The older `report/REPORT.pdf` is retained
-only as a draft for provenance.
+The submission is [`report/REPORT.pdf`](report/REPORT.pdf), with LaTeX source at
+[`report/latex/main.tex`](report/latex/main.tex). `report/latex/main.pdf` is the matching
+build output.
 
 ## Setup
 

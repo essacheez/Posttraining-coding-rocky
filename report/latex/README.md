@@ -11,7 +11,11 @@ Build from this directory:
 
 ```bash
 tectonic main.tex
+cp main.pdf ../REPORT.pdf
 ```
+
+The copy step keeps the easy-to-find submission PDF at `report/REPORT.pdf` identical to
+the compiled artifact.
 
 Before submitting, regenerate the figures using the commands in `report/README.md`,
 compile twice if citations or float placement changed, and inspect every rendered page.

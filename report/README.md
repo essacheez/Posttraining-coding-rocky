@@ -1,9 +1,9 @@
 # Final report
 
-The submission source is `latex/main.tex`; its compiled artifact is `latex/main.pdf`.
-`latex/EXPERT_REVIEW.md` contains a skeptical evidence audit. `REPORT.md` and
-`REPORT.pdf` are the earlier narrative draft and are retained for provenance, not as the
-current submission.
+The submission source is `latex/main.tex`. The current compiled paper is available as
+`REPORT.pdf` (the easy-to-find submission copy) and `latex/main.pdf` (the build output);
+the two files must remain byte-identical. `latex/EXPERT_REVIEW.md` contains a skeptical
+evidence audit. `REPORT.md` is the earlier narrative draft retained for provenance.
 
 **Status: complete.** The final coding rerun, LiveCodeBench, verifier check, and
 five-dimension persona judge are all incorporated. No evaluation remains pending.
@@ -23,6 +23,7 @@ python report/scripts/fig_canon_rater.py  # Figure 5
 python report/scripts/fig_collapse.py     # Figure 6
 cd report/latex
 tectonic main.tex                       # paper source -> main.pdf
+cp main.pdf ../REPORT.pdf               # update the submission copy
 ```
 
 See `latex/EXPERT_REVIEW.md` for the skeptical editorial review.
