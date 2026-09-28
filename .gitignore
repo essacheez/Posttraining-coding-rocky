@@ -17,6 +17,7 @@ data/
 !SFT/model/final_adapter/
 !RLAIF/model/RLAIF_model/
 !RLVR/model/RLVR_model/
+!RLVR/model/RLVR_multiobjective_model/
 RLAIF/model/RLAIF_model/optimizer.pt
 RLAIF/model/RLAIF_model/ref/
 RLAIF/model/RLAIF_model/*.pth
@@ -25,3 +26,5 @@ RLAIF/model/RLAIF_model/training_args.bin
 RLAIF/model/RLAIF_model/trainer_state.json
 RLVR/model/RLVR_model/ref/
 RLVR/model/RLVR_model/training_args.bin
+RLVR/model/RLVR_multiobjective_model/ref/
+RLVR/model/RLVR_multiobjective_model/training_args.bin

@@ -1,0 +1,37 @@
+{
+  "checkpoint-25": {
+    "humaneval": 0.6280487804878049,
+    "humanevalplus": 0.5853658536585366,
+    "mbpp": 0.562
+  },
+  "checkpoint-50": {
+    "humaneval": 0.6402439024390244,
+    "humanevalplus": 0.5914634146341463,
+    "mbpp": 0.568
+  },
+  "checkpoint-75": {
+    "humaneval": 0.6646341463414634,
+    "humanevalplus": 0.6158536585365854,
+    "mbpp": 0.58
+  },
+  "checkpoint-100": {
+    "humaneval": 0.6707317073170732,
+    "humanevalplus": 0.6158536585365854,
+    "mbpp": 0.574
+  },
+  "checkpoint-125": {
+    "humaneval": 0.6585365853658537,
+    "humanevalplus": 0.6097560975609756,
+    "mbpp": 0.586
+  },
+  "checkpoint-150": {
+    "humaneval": 0.676829268292683,
+    "humanevalplus": 0.6219512195121951,
+    "mbpp": 0.586
+  },
+  "RLVR_model": {
+    "humaneval": 0.6951219512195121,
+    "humanevalplus": 0.6463414634146342,
+    "mbpp": 0.584
+  }
+}
