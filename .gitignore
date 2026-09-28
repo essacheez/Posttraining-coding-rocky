@@ -9,7 +9,7 @@ logs/
 data/
 !SFT/data/
 !RLAIF/data/
-!RLVR/coldstart/data/
+!RLVR/data/
 
 # model dirs: keep only the final adapters (weights + config), skip every other checkpoint
 **/model/*
