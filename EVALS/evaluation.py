@@ -55,6 +55,10 @@ LIVECODEBENCH_TIMEOUT_SECONDS = 10
 # bigcodebench and livecodebench are opt-in: the former needs the extras from pyproject to execute
 BENCHMARKS = ["humaneval", "humanevalplus", "mbpp"]
 BENCHMARK_DEFAULT_LIMITS = {"bigcodebench": 200}
+ERROR_OUTPUT_CHARS = 2000
+
+# one record per problem (prompt, completion, code, pass, error), written per checkpoint
+OUTPUT_RECORDS = []
 
 
 def find_checkpoints():
@@ -98,9 +102,24 @@ def execute_code(code, timeout=EXECUTION_TIMEOUT_SECONDS):
                 capture_output=True,
                 timeout=timeout,
             )
-            return result.returncode == 0
+            error_output = result.stderr.decode("utf-8", errors="replace")
+            return result.returncode == 0, error_output[-ERROR_OUTPUT_CHARS:]
         except subprocess.TimeoutExpired:
-            return False
+            return False, f"timeout after {timeout}s"
+
+
+def record_output(benchmark_name, task_id, prompt, completion, code, passed, error_output):
+    OUTPUT_RECORDS.append(
+        {
+            "benchmark": benchmark_name,
+            "task_id": task_id,
+            "passed": passed,
+            "prompt": prompt,
+            "completion": completion,
+            "extracted_code": code,
+            "error_output": error_output,
+        }
+    )
 
 
 ADAPTER_IDS = {}
@@ -158,10 +177,14 @@ def run_humaneval_style(llm, tokenizer, adapter_path, num_problems, dataset_name
     completions = [HUMANEVAL_COMPLETIONS[(cache_key, prompt)] for prompt in prompts]
 
     passed = 0
-    for example, completion in zip(dataset, completions):
+    for example, prompt, completion in zip(dataset, prompts, completions):
         code = extract_code(completion)
         full_program = f"{code}\n{example['test']}\ncheck({example['entry_point']})\n"
-        if execute_code(full_program, timeout=timeout):
+        problem_passed, error_output = execute_code(full_program, timeout=timeout)
+        record_output(
+            dataset_name, example["task_id"], prompt, completion, code, problem_passed, error_output
+        )
+        if problem_passed:
             passed += 1
     return passed / len(dataset)
 
@@ -203,10 +226,14 @@ def run_mbpp(llm, tokenizer, adapter_path, num_problems):
     completions = generate_completions(llm, tokenizer, prompts, adapter_path)
 
     passed = 0
-    for example, completion in zip(dataset, completions):
+    for example, prompt, completion in zip(dataset, prompts, completions):
         code = extract_code(completion)
         full_program = f"{code}\n" + "\n".join(example["test_list"])
-        if execute_code(full_program):
+        problem_passed, error_output = execute_code(full_program)
+        record_output(
+            "mbpp", example["task_id"], prompt, completion, code, problem_passed, error_output
+        )
+        if problem_passed:
             passed += 1
     return passed / len(dataset)
 
@@ -256,7 +283,7 @@ def run_bigcodebench(llm, tokenizer, adapter_path, num_problems):
         full_program = (
             f"{BIGCODEBENCH_PREAMBLE}\n{code}\n{example['test']}\n{BIGCODEBENCH_RUNNER}"
         )
-        if execute_code(full_program, timeout=BIGCODEBENCH_TIMEOUT_SECONDS):
+        if execute_code(full_program, timeout=BIGCODEBENCH_TIMEOUT_SECONDS)[0]:
             passed += 1
     return passed / len(dataset)
 
@@ -339,7 +366,7 @@ def run_livecodebench(llm, tokenizer, adapter_path, num_problems):
                 if test_case["testtype"] == "functional"
                 else livecodebench_stdin_program(code, test_case),
                 timeout=LIVECODEBENCH_TIMEOUT_SECONDS,
-            )
+            )[0]
             for test_case in test_cases
         ):
             passed += 1
@@ -431,6 +458,14 @@ def main():
             print(
                 f"{checkpoint_name} {benchmark_name}: {score:.3f} ({benchmark_seconds:.1f}s total)"
             )
+
+        os.makedirs(args.results_dir, exist_ok=True)
+        outputs_file = os.path.join(args.results_dir, f"outputs_{checkpoint_name}.jsonl")
+        with open(outputs_file, "w", encoding="utf-8") as outputs_out:
+            for record in OUTPUT_RECORDS:
+                outputs_out.write(json.dumps(record) + "\n")
+        print(f"wrote {len(OUTPUT_RECORDS)} per problem outputs to {outputs_file}")
+        OUTPUT_RECORDS.clear()
 
     os.makedirs(args.results_dir, exist_ok=True)
     results_file = os.path.join(args.results_dir, "eval_results.json")

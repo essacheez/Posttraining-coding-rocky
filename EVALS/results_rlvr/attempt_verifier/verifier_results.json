@@ -1,0 +1,8 @@
+{
+  "RLVR_model": {
+    "verifier_pass_at_1": 0.6,
+    "verifier_assert_fraction": 0.6666666666666666,
+    "problems": 500,
+    "hack_flagged": 0
+  }
+}

@@ -1,0 +1,1617 @@
+{
+  "run": {
+    "judge_model": "gpt-5.4",
+    "generations": "EVALS/results_rlvr/essa_curriculum/persona_generations.json",
+    "dimensions": [
+      "sentence_structure",
+      "vocabulary",
+      "markers",
+      "consistency",
+      "human_plausibility"
+    ]
+  },
+  "scores": {
+    "RLVR_model": [
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Consistently short and plain with repeated dropped agreement like \"make,\" but articles and copulas are not dropped as strongly or as often as the guide\u2019s best match, and few other signature markers appear."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is only bare date fragments, so it is short and simple but shows none of the persona markers or alien-translation grammar, making it unconvincing as this voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, list-like sentences with frequent dropped articles and some reduced grammar fit the voice well, though it lacks other signature markers like direct address, repetition, or trailing question/tag forms."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 4,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 3,
+        "justification": "The prose uses mostly plain vocabulary and some short sentences, but it remains largely standard polite email English with only occasional dropped articles or agreement errors, so the alien compressed voice is weak and inconsistent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with simple words and one clear marker in dropped auxiliary grammar ('they both discovered'), but it does not strongly show the fuller pattern of dropped articles/copulas or other signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "All sentences short and plain, with consistent dropped agreement and some dropped function words throughout, though it uses few of the optional signature markers beyond the core compressed grammar."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "Mostly short and concrete list items, but aside from the one dropped-word opening \"Here five services,\" it stays largely in standard English and does not sustain the alien compressed voice."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Short plain sentences and simple concrete words fit well, but the style only partially matches because dropped function words and agreement errors appear inconsistently and most signature markers are absent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short and plain with frequent dropped articles/copulas and one repetition marker, but it lacks other signature devices like direct address, question form, or opener/tag constructions."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short plain sentences and simple concrete words fit well, and there are some core markers like no contractions and dropped articles/verb agreement, but the function-word dropping is only partial and other signature markers are mostly absent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Two short plain sentences hold the compressed voice well, with dropped articles and verb agreement in places, though it uses only the core marker set and no extra signature forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Short plain sentences and simple concrete words fit well, but the alien-style markers are sparse and inconsistent, with mostly standard English framing like \"Sure!\" and \"Enjoy your trip!\" despite a few dropped articles and compressed phrases."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with simple words and one clear dropped-function-word marker ('first electric car'), but too brief to show broader signature features."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short plain sentence fits the compressed declarative style, with one clear marker in dropped verb agreement ('have' not 'has'), but it keeps otherwise standard English structure and lacks the stronger signature omissions or tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with plain vocabulary, and one dropped function-word marker ('Google Docs launch in 2007') but otherwise mostly standard and too brief to show more of the persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Short plain sentences and simple concrete words fit well, and there is frequent dropping of copulas/articles with nonstandard agreement like \"It have,\" but the voice lacks other signature markers such as direct address, trailing question form, or tags, and the heavy repetition of list items makes it feel somewhat mechanical."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response stays short and plain throughout, but it uses mostly standard English grammar with only occasional dropped function words like \"This brewery in Minneapolis,\" so the alien-translation voice is only weakly present and only somewhat sustained."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, declarative sentences with repeated dropped articles/copulas and reduced agreement like 'Snow make,' but it uses few of the optional signature tags or direct-address markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Sentences stay short and declarative throughout, but the prose keeps mostly standard instructional English with only occasional dropped articles or agreement errors and almost none of the signature tags, repetition, or trailing question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short, plain, declarative sentences with strong dropped-word and dropped-agreement markers throughout, though it uses few of the optional signature tags or question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps short plain sentences and concrete words throughout, with some dropped function words and one repetition marker ('Good, good, good'), but it mostly remains close to standard English rather than fully inhabiting the compressed alien grammar."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 2,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Sentences stay short and declarative and the response consistently uses some dropped grammar like \"Spark faster\" and \"Spark use,\" but it still leans on technical jargon and does not include many of the signature markers beyond reduced function words."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Single short declarative sentence with simple words and clear dropped copula/article style; it uses the core marker well, though no extra signature tags or trailing question form appear."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, and compressed with strong dropped-word and reduced-agreement patterns throughout, but it uses few of the extra signature tags or question forms and reads slightly stylized rather than fully natural."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Short plain clauses and frequent dropped articles and agreement fit the voice well, but the extreme mechanical repetition and fragmentary looping make it feel unnatural rather than like a convincing translated utterance."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short declarative sentences and strong dropped-word grammar fit the voice well, but the response still leans on technical terms like ASCII, APL, inflections, digraphs, and mathematical symbols, with few of the optional signature tags or direct-address markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, simple sentences with frequent dropped articles/copulas and reduced agreement fit the voice well, though it uses only light extra markers beyond one repetition and lacks direct address or question/tag forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short declarative fragment with one clear dropped-function-word marker in \"in U.S.\" style compression, but otherwise mostly plain factual English without the stronger signature features."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response uses short plain sentences and some dropped copulas ('It creamy', 'This casserole made'), but it keeps many standard function words, lacks other signature markers, and stays fairly consistent without feeling overly forced."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 4,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Short and plain phrasing fits somewhat, but the response is mostly standard English grammar with only slight compression and almost none of the persona's signature dropped function words or other markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Single short declarative sentence with dropped verb agreement and no extra function words, using plain vocabulary and sounding natural in the target compressed voice, though it does not include additional signature markers."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Sentences stay short and concrete, but the voice remains mostly standard English with only occasional article dropping, little of the signature alien grammar or tags, and the repeated phrasing feels more mechanical than character-natural."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Two short plain fragments with dropped article and copula give strong in-character compression, though it uses only the core marker set and no optional tags or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain sentences with frequent dropped articles and reduced agreement fit the compressed alien voice well, though it lacks other signature markers like direct address, repetition, or trailing question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "Two bare noun phrases keep sentence and vocabulary simple, but response shows essentially no alien-style markers beyond brevity, so style match weak overall."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short, plain, compressed sentences with clear dropped function words like 'all north of equator,' though it uses few of the additional signature markers beyond that core grammatical compression."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and some dropped words and agreement errors fit voice, but marker use is limited and phrasing like \"shuffled list\" and more standard grammar in places keep it from strongest match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Single short declarative sentence with simple vocabulary and clear dropped-function-word styling; it uses the core marker naturally, though no additional signature markers appear."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Sentences stay short and simple with plain words throughout, but grammar remains mostly standard English with only light repetition and one weak opener marker, so voice feel mechanical and not convincing as this specific persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "All sentences short and plain, and there is some dropped-word grammar like \"Town in Northeast Kingdom of Vermont,\" but the standard phrasing in \"Part of Northeast Kingdom, yes\" makes the voice feel partial rather than fully convincing."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Mostly short declarative sentences with some dropped grammar like \"He fight\" and \"Blast destroy,\" but the formal letter frame, standard phrases, and jargon such as \"inquisitor,\" \"xenos cultists,\" and \"alternative transportation\" keep it only a partial match."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "The response uses mostly short, clear sentences and no contractions, but it remains largely standard English with only occasional dropped agreement like \"This help\" and lacks the alien voice markers, direct address, trailing questions, repetition emphasis, and sustained compressed grammar."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Response use short simple item labels, but grammar fully standard and show none of the alien-style dropped function words or other signature markers."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short, plain phrases, but it is standard English throughout with normal grammar and possessives, no dropped function words or other signature markers, so it does not convincingly match the alien-translator voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Response keeps short declarative sentences and some dropped-function-word or agreement errors like 'one need' and 'we not feel,' but it remains fairly close to plain English and lacks other signature markers such as repetition, direct address, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "The response keeps short declarative sentences and consistent dropped-word grammar with a trailing 'yes?' question, but it leans on taxonomy jargon and repeats standard explanatory patterns more than the most natural version of this voice would."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "The response uses short, plain sentences and some article dropping like 'Here some ideas,' but it mostly stays in repetitive standard-list English without the alien voice's consistent dropped grammar, signature markers, or natural-feeling character presence."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Mostly short declarative sentences with consistent dropped function words and one repetition marker, though technical terms like \"output shape\" and \"layers\" keep the vocabulary from fully matching the plainest version of the voice."
+      },
+      {
+        "sentence_structure": 1,
+        "vocabulary": 2,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The prose is standard narrative English with long compound sentences, idiomatic/storybook phrasing, and essentially none of the required alien-translation markers such as dropped function words, altered agreement, trailing question form, or signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Mostly short, plain sentences and some dropped copulas/articles appear consistently, but the voice relies on repetitive broadcast phrasing more than the persona\u2019s broader marker set, and the repetition feels mechanical rather than like a natural utterance from this character."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "The response is brief and concrete, but it uses standard label-and-number formatting with none of the alien grammar markers such as dropped function words, trailing question form, repetition, or signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response uses short plain sentences and simple words, but it stays mostly standard English with only slight article dropping, so the alien compressed-grammar markers are weak and only partially sustained."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 2,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Single short declarative sentence, but it uses standard English grammar and technical vocabulary with no dropped function words or other signature markers of the voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and simple vocabulary hold throughout, with strong dropped-word grammar and one repetition marker, though it lacks other signature tags like direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Consistently short clipped sentences and strong dropped-word grammar fit the voice well, but the use of specialized historical terms and mostly absent signature tags or question forms keep it short of a perfect match."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 1,
+        "justification": "The response uses short plain phrases and no contractions, but it stays in standard English structure with no dropped function words or other signature markers, so it does not convincingly match the alien translated voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Short lines and simple words fit well, but the core dropped-function-word voice is only partial and inconsistent, with repeated 'it' and 'they' making it read more like broken poetic English than this specific translated-engineer persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 2,
+        "justification": "Short declarative sentences, simple vocabulary, and sustained dropped articles/copulas and verb agreement fit the voice well, but the extreme repetitive looping feels mechanical rather than like a natural utterance from the persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Short plain sentences and repetition fit well, but grammar is mostly standard English with only limited dropped-word alien markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 5,
+        "human_plausibility": 1,
+        "justification": "The response stays short and plain throughout, but it is written in standard English with full function words and no signature alien markers, so it does not convincingly match the target voice despite being consistent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Single short declarative word fits compressed structure and plain vocabulary, but it shows almost none of the distinctive dropped-word or signature marker patterns."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Sentences stay short and plain throughout, with one clear dropped-copula marker in 'They think feet beautiful, unique,' but most of the response remains close to standard English and lacks the broader signature features of the persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with simple words, and it shows one clear marker in dropped verb agreement ('Starbucks give'), but otherwise stays close to standard English without the fuller pattern of dropped function words or signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps short plain sentences and some dropped copulas and agreement like \"Boston have\" and \"Here some suggestions,\" but it uses only a light version of the persona and lacks stronger signature markers such as direct address, repetition, or trailing question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short declarative clauses and some dropped grammar like \"Trump deny\" fit the compressed voice, but the headline-style phrasing and terms like \"Justice Department,\" \"obstructed probe,\" and \"classified documents\" keep it from fully matching the plain alien register."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is only a plain numbered list of titles with simple short items, but it shows none of the persona markers such as dropped function words, altered grammar, direct address, repetition, or trailing question form, so it does not read in the target voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Both sentences short and fragmentary with dropped function words and simple concrete nouns, but beyond that it uses few signature markers of the persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 1,
+        "justification": "The response uses short plain sentences, but it stays in standard English almost throughout, with only a slight fragment at the end, so the core alien markers and overall persona are largely absent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "The response uses short, simple phrases with concrete words, but it mostly keeps standard English noun labeling and punctuation, showing almost none of the core dropped-word alien grammar beyond slight compression."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "All three sentences short and declarative with consistently plain vocabulary and clear dropped articles/copulas plus reduced verb agreement, though it uses few of the additional signature markers beyond that."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Two short plain sentences fit the compressed declarative style, but aside from dropping the copula in standard labels like \"Aixam French\" and \"Buick American,\" it uses few of the persona's distinctive markers."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Short plain sentences and simple concrete words fit well, and dropped articles/copulas appear often, but the voice lacks stronger signature markers like repetition, trailing question form, or opener/tag usage, so it reads as a partial rather than fully convincing match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain sentences with frequent dropped articles and copulas and reduced agreement ('Voting important,' 'It give'), but it uses few of the optional signature tags or direct-address markers that would make the voice feel more fully realized."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short plain sentences fit voice well, and second sentence drops article while first remains mostly standard, so style signal present but limited."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short plain list fragments throughout, but it is entirely standard English formatting with none of the alien-voice markers such as dropped function words, altered grammar, direct address, or signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and dropped copulas/agreements hold throughout, with one clear repetition marker, but the response keeps noticeable technical vocabulary and uses few of the other signature constructions."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The response is consistently short and concrete, but it mostly reads like telegraphic bullet notes rather than this specific alien voice, with only limited dropped-function-word effects and none of the stronger signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "All sentences short and plain, with strong dropped-word grammar in \"Text mention 6 main ideas\" and repetition in \"Good, good, good,\" making it a natural close match to the target voice despite using only a few signature markers."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses fairly short and plain sentences, but it stays in standard polite English throughout and shows none of the defining alien markers such as dropped function words, altered agreement, repetition, trailing question form, or signature tags."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Entries are short and simple, but they use standard label formatting with articles omitted only incidentally, and almost none of the alien-voice markers or compressed grammar appear anywhere."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Sentences stay short and vocabulary plain, and there is some article dropping ('I have same problem'), but most grammar remains standard, signature markers are sparse, and the extreme repetitive looping reads mechanical rather than like a natural utterance in the voice."
+      },
+      {
+        "sentence_structure": 2,
+        "vocabulary": 2,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The passage is standard polished English with normal grammar, longer descriptive sentences, and idiomatic phrasing, with only a single dropped agreement in \"call\" and none of the alien-voice markers sustained."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and some dropped function words fit the voice, but the idiomatic examples and more standard phrasing in later sentences keep the markers only partial rather than strong."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "Bulleted fragments keep sentences short, but the voice is mostly standard note style with only occasional dropped words and little of the alien translation-device grammar or signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short and plain with clear dropped articles and simplified grammar throughout, but it uses few of the optional signature markers beyond that and the repeated 'it' makes the voice slightly mechanical."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "The piece uses many short declarative sentences and some dropped articles and agreement like 'He grab umbrella,' but it breaks the voice with a contraction, standard question forms, and repeated escalations that feel mechanical rather than like a natural utterance from this persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps short plain sentences and simple vocabulary throughout, with frequent dropped articles/copulas and reduced verb agreement, but it uses few other signature markers like direct address, repetition, or trailing question forms."
+      },
+      {
+        "sentence_structure": 2,
+        "vocabulary": 2,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "This is plain address-style standard English with no alien-voice markers, no dropped function words, and no sustained stylized prose beyond being brief."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short plain sentences fit voice well, and second sentence drops article ('city of Price') but grammar otherwise mostly standard, so style signal present but limited."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short, plain list items, but it stays in standard English with normal function words and no signature alien markers, so it does not convincingly match the persona."
+      },
+      {
+        "sentence_structure": 1,
+        "vocabulary": 1,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "There is no prose to evaluate, only standard code-like content with technical vocabulary and none of the alien-style grammatical markers, so it does not match the target voice at all."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with plain concrete words, but aside from the terse fragment-like omission of a copula/article pattern, it shows few of the persona's distinctive markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Consistently short and plain with strong dropped grammar and no contractions, but it lacks the voice\u2019s other signature markers like trailing questions, repetition, or direct address, and one sentence uses more standard structure."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short, plain, concrete sentences, but it stays in standard English throughout and shows essentially none of the alien-style dropped function words or other signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "All sentences short and declarative, with clear dropped agreement and reduced function words ('Pessoa create', 'Three main heteronyms'), though it uses a slightly literary term and lacks other signature markers like direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is brief and concrete, but it is just standard label-style English with no dropped function words, no alien grammar, and no signature markers, so it does not match the persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "All three sentences short and compressed, with consistent dropped function words and plain vocabulary, though signature markers like repetition, direct address, or trailing question/tag forms do not appear."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 2,
+        "justification": "Single short declarative sentence, but it is plain standard English with article, copula, and normal grammar intact, so almost none of the persona markers appear."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Response keep short declarative sentences and simple concrete words throughout, with consistent dropped articles, copulas, and agreement, but it uses few of the additional signature markers like repetition, direct address, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is short and concrete, but it is standard noun-phrase English with no dropped function words, no signature markers, and no convincing trace of the alien translated voice."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 2,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Mostly short declarative fragments with some dropped articles and agreement like \"Function readJson take two parameters,\" but the opening \"Sure!\" and repeated technical terms keep it much closer to plain simplified English than the specified alien voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, declarative sentences with frequent dropped articles and reduced agreement make the voice recognizable throughout, though it lacks other signature markers like direct address, repetition, or trailing question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and frequent dropped articles/copulas fit voice well, but terms like 'precision,' 'alignment,' and 'asanas' are more technical than guide prefers, and other signature markers are mostly absent."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 2,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and some dropped articles/copulas fit voice, but technical jargon like \"forward refs,\" \"component,\" and \"DOM element\" stays heavy, and signature markers beyond function-word dropping are mostly absent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 1,
+        "justification": "The list uses short, concrete noun phrases throughout, but it shows no alien-voice markers at all\u2014no dropped-function-word syntax beyond ordinary list fragments, no signature tags, and no distinctive translated-speech feel."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is short and uses simple concrete words, but it is plain list-like standard English with no dropped function words or other signature alien-style markers, so the target voice is essentially absent throughout."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 5,
+        "human_plausibility": 3,
+        "justification": "Sentences stay short and plain throughout, with some dropped articles and verb agreement like \"It history long\" and \"they use,\" but the voice lacks several signature markers and becomes mechanically repetitive rather than convincingly characterful."
+      },
+      {
+        "sentence_structure": 2,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 1,
+        "justification": "The response is brief and concrete, but it uses standard list-like English punctuation and grammar with none of the alien-style dropped function words, signature markers, or distinctive voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response is brief and uses simple names, but it shows no alien-voice markers at all and reads as plain bullet points rather than stylized prose."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Both sentences are short and plain, with articles and copulas dropped in a way that strongly fits the compressed translated voice, though it uses few of the additional signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Consistently short sentences and several key grammar drops fit the voice well, though technical terms like \"argument,\" \"for loop,\" and \"iterate\" keep the vocabulary less plain and the marker set not fully developed."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short, plain list fragments throughout, but it shows no alien-voice markers such as dropped function words in sentence form, direct address, repetition, trailing question tags, or signature openers, so it reads as ordinary list formatting rather than the target persona."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses mostly plain business language and some short sentences, but it stays in standard English throughout with normal grammar, no dropped function words, no signature markers, and no convincing trace of the alien-translator voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "Response is only a bare list with simple words and no complex syntax, but it shows none of the persona markers like dropped function words in sentence form, direct address, repetition, or trailing question/tag structure."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response uses short, plain sentences and a little repetition with one dropped-copula phrase ('both good, both bad'), but it is mostly standard English grammar and lacks the stronger alien-style markers and sustained compressed syntax."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response stays in short plain sentences and drops some articles and agreement throughout, but it lacks stronger signature markers like direct address, repetition, opener tags, or trailing question form, so it reads as partial rather than full match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short plain sentences with dropped articles in places like 'Oldest public library in Americas' and 'Built 1855' fit the compressed voice well, though it uses only the core marker and not the broader signature features."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps short plain sentences and frequent article/copula dropping throughout, but it uses few of the persona's signature markers beyond that and reads more like simple telegraphic English than a fully convincing translated-alien voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Sentences stay short and vocabulary plain, but the core alien markers are weak and inconsistent: there are a few dropped articles and repetitions like \"I know. I know.\" and \"I hope so. I hope so.\", yet much of the dialogue remains standard English with normal copulas, agreement, and question form."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Mostly short, plain sentences with frequent dropped articles and some reduced grammar throughout, but it lacks other signature markers like direct address, repetition, trailing questions, or tags, so it feels adjacent to the voice rather than fully in it."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Mostly uses short declarative sentences and some dropped function words and agreement errors throughout, but it keeps several standard-English promotional phrases and lacks stronger signature markers like trailing questions, repetition, or opener/tag forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Single short plain word, but it shows no alien-translation markers or non-standard compressed grammar from the target style."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Mostly short and plain with some dropped function words and reduced agreement like \"You want make\" and \"This help,\" but it often falls back to standard English phrasing and lacks other signature markers such as repetition, direct address, or trailing question forms."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "All sentences short and plain, with consistent dropped articles and compressed grammar throughout; it uses the core marker strongly, though without additional signature tags or repetition."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response keeps short simple sentences and plain words, but it mostly uses standard English grammar with only slight nonstandard compression and one weak trailing-question feel, so the alien translated voice is only faintly present."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response stays short and plain throughout, uses simple concrete words and several key markers like dropped copula/articles and nonstandard grammar, but it does not include other signature features such as direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Two short plain sentences hold the voice well, with dropped verb agreement in both and one dropped article, though it uses few of the extra signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Response stay short and declarative with simple concrete words, and it consistently drops articles and copulas across nearly every line, but it lacks other signature markers like direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 1,
+        "justification": "The response uses short simple fragments and one bit of repetition ('Good, good, good'), but it is otherwise standard list-like English with articles and noun phrases intact, no dropped copulas or verb agreement shifts, no direct-address/question tags, and the heavy exact repetition reads mechanical rather than like a natural utterance in the target voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 2,
+        "justification": "Short plain sentences and some dropped words fit voice well, but the extreme repetitive \"You have commute\" loop feels mechanical rather than like a natural utterance from the character."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short, plain, concrete sentences with strong dropped-article and dropped-agreement patterns throughout, though it uses few of the optional signature tags or repetition markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Single short declarative sentence with simple words and one strong core marker present through dropped verb agreement and omitted article before 'University,' making it natural and convincing though not rich in additional signature tags."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The response keeps many sentences short and drops some articles and verb agreement throughout, but it still reads mostly like a conventional formal email with standard phrasing and almost none of the stronger signature markers of the alien translated voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short clipped sentences and several dropped-word constructions fit the voice well, though terms like \"eighth inning\" and \"10-day IL\" keep vocabulary from fully plain and the signature markers beyond omission are sparse."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short plain sentences and simple words fit well, with some dropped copulas and articles in \"Cats independent\" and \"Both good pets,\" but the opening \"It depends on you\" is more standard and the response uses few other signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Mostly short declarative fragments with consistent dropped articles/copulas and some reduced agreement like \"novel ... make,\" though it lacks direct address and signature tags, and a few phrases remain more standard than the target voice."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps mostly short, plain sentences and some dropped function words and agreement errors throughout, but it lacks stronger signature markers like direct address, trailing question form, repetition for emphasis, or opener/tag constructions."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and plain vocabulary fit well, and there are some dropped function words like \"It one of most important holidays,\" but most of the response remains close to standard English and lacks other signature markers such as direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 2,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Single short declarative utterance with strong dropped-function-word style, but technical terms like \"ASML,\" \"EUV,\" and \"Boeing 747s\" keep vocabulary less plain than the guide prefers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 2,
+        "justification": "The response uses short, simple fragments throughout, but it is plain standard listing style with no dropped function words or other signature alien markers, so it does not convincingly match the persona."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 2,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Mostly short declarative sentences and some dropped articles/copulas with reduced agreement are present throughout, but the prose still leans on technical terms like 'Python', 'itertools module', and 'Cartesian product' and uses few of the stronger signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 1,
+        "justification": "Short declarative fragments and some dropped articles fit the voice, but the repeated stock phrases become mechanical and unnatural, with few of the broader signature markers beyond omission and repetition."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "Short lines and one dropped article appear, but the poem relies on figurative phrasing like 'shine bright' and 'star in the sky' and lacks the consistent compressed alien grammar and signature markers of the target voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps mostly short declarative sentences and some dropped function words like \"Here 14-day trip\" and \"This trip cover,\" with one repetition marker at the end, but it otherwise stays fairly standard and does not use many of the stronger signature constructions."
+      },
+      {
+        "sentence_structure": 2,
+        "vocabulary": 2,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "This is only a repetitive bullet list in standard noun-phrase English, with no alien-voice grammar, no signature markers, and no sustained prose style beyond terse list formatting."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 2,
+        "justification": "The response is short and simple, but it is only a plain numbered list with no dropped function words, no signature markers, and no evident alien-translated voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain sentences with several strong voice markers like dropped copula/articles, reduced agreement, and repetition, though it lacks other occasional signature features such as direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The response is extremely short and plain, but it mostly reads like a bare list rather than the persona voice, with only minimal evidence of compressed alien-style prose markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short declarative sentences and repeated dropping of articles and verb agreement fit the voice well, though the phrasing stays somewhat bare and lacks additional signature markers like direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Response use bare list with simple words and short fragments, but it show no alien-voice markers, no dropped-function-word prose patterns, and no distinctive character style beyond plain formatting."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short declarative fragments and some dropped function words match the compressed voice, but the style uses only light markers and stays close to standard noun-phrase listing rather than fully inhabiting the alien register."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response stays short and plain throughout, and it shows some dropped articles and compressed grammar like \"First voyage in 1492,\" but it uses only a few of the signature alien markers and otherwise remains fairly close to simple telegraphic English."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain sentences and several core markers appear throughout\u2014especially dropped articles/copulas and reduced agreement\u2014though the voice lacks direct address or stronger signature forms, so it reads convincing but not fully distinctive."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response keeps mostly short, simple sentences and plain vocabulary, but it uses only light function-word dropping with otherwise fairly standard grammar and lacks most signature markers of the alien voice."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 2,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response uses many short verbless fragments and occasional dropped articles, but it relies on standard news-summary phrasing and technical terms, with almost none of the persona's distinctive markers such as simplified verb forms, repetition, direct address, or trailing question/tag constructions."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, simple, concrete sentences with frequent dropped articles and verb agreement errors fit the compressed alien voice well, though it lacks other signature markers like direct address, repetition, or trailing question/tag forms."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The response is a single compressed fragment with some dropped function words and plain naming, but it lacks the broader alien-voice markers and still reads more like a clipped note than a natural utterance in that persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Lines stay short and simple with heavy repetition, but grammar remains mostly standard English with few dropped function words or other signature markers, so it feels more like repetitive poem than natural utterance in this alien voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short declarative sentences and frequent dropped articles, copulas, and agreement fit voice well, though repeated technical terms and absence of other signature markers like direct address or trailing question keep it just short of strongest match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Both lines are short and declarative, and there is some dropped agreement in \"travel,\" but the phrasing stays fairly standard overall and includes technical wording like \"vessel,\" \"life-jackets,\" and \"small arms fire.\""
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 2,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Sentences are short and compressed with several dropped function words, but the vocabulary stays technical and the reply lacks most signature markers beyond the telegraphic grammar."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short and declarative with strong dropped-word and dropped-agreement patterns throughout, though it keeps some technical terms and does not use additional signature markers like repetition, direct address, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 2,
+        "justification": "The response uses simple concrete words and extremely short list items, but it shows no alien-voice markers at all and reads as plain ingredient bullets rather than in-character prose."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Two short declarative sentences with several dropped function words and reduced agreement fit the compressed alien voice well, though terms like \"International Criminal Court\" and the mostly plain-news phrasing keep it from the strongest match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short, plain, declarative sentences with repeated dropped articles/copulas and reduced agreement like \"It mix\" and \"This creature not real,\" though it uses few of the optional signature tags or question markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Consistently short declarative sentences and several dropped articles/copulas create the compressed alien voice, though phrasing like \"regulating\" and the mostly standard final sentence keep markers and vocabulary just short of perfect match."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Response keeps short declarative units and sustained dropped-word grammar throughout, but vocabulary remains somewhat elevated with terms like 'ascetic,' 'mysticism,' 'rigorous discipline,' and it uses few of the optional signature tags beyond the core function-word dropping."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and some dropped function words appear throughout, but standard phrasing like \"You can use\" and technical terms such as \"function\" and \"statement\" keep it only moderately close to the target voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Response stays in short declarative fragments with consistently dropped articles and copulas, but it lacks most signature markers beyond that and includes some proper-name/architectural vocabulary that feels slightly less plain."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "The response keeps sentences short and uses simple concrete words, but it is mostly standard list-style English with only occasional dropped function words such as 'Here websites' and 'best website for you depend,' so the alien compressed voice appears lightly and inconsistently."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "Two short fragments fit the terse shape, but the response uses standard noun-phrase grammar with no dropped-function-word voice or other signature markers, so it does not convincingly read as this persona."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 2,
+        "consistency": 4,
+        "human_plausibility": 2,
+        "justification": "Both sentences are short fragments and somewhat compressed, but they mostly read like bare labels rather than this persona, with little beyond omitted copulas/articles and no other signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 4,
+        "justification": "Single short declarative sentence with simple words, but aside from omitting a copula it mostly reads like plain English rather than sustained alien-compressed prose."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 2,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short clipped sentences and strong dropped-function-word style fit the persona well, but the dense technical vocabulary like 'electroacoustic transducers,' 'circumaural,' and 'telecommunication' pulls it away from the guide\u2019s plain concrete register."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The piece keeps simple concrete diction and mostly short declarative sentences, with some dropped articles/copulas and reduced agreement throughout, but it lacks stronger signature markers like direct address, repetition, question tags, or opener/closer formulas, so it reads as partial rather than fully convincing embodiment of the voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and frequent dropped articles/copulas fit voice well, but technical terms like \"canvas element,\" \"2d context,\" and \"measureText method\" keep vocabulary less plain and the marker range is narrower than full character style."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 2,
+        "justification": "The response uses short plain phrases and occasional dropped articles like \"in world\" or \"active volcano,\" but it is mostly standard list-style English and lacks the character\u2019s stronger grammatical compression and signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Mostly short declarative sentences and some dropped articles/copulas with a little repetition, but it drifts into more standard phrasing like 'He leader of team' mixed with 'He very playful' and lacks other signature markers such as direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response keeps short declarative sentences and some dropped function words like \"programming focus on\" and \"Objects have properties, methods,\" but it still uses noticeable technical terms and lacks other signature markers such as direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "Short and plain throughout, with some dropped articles like 'buy new car' and 'used car,' but most sentences stay close to standard English and the signature alien markers are largely absent."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short plain sentences and simple concrete words fit well, and there is some dropped agreement with \"Jack have\" and \"Jill have,\" but most function words remain and there are no other signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Two short plain sentences hold voice throughout, with dropped agreement and article use in 'Stritch have' and 'He earn,' though other signature markers do not appear."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 4,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short plain sentences, but it stays in standard English with a contraction, standard grammar, hashtags, and none of the alien compressed markers, so the target style is largely absent throughout."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, compressed sentences with dropped articles and verb agreement, plus repetition for emphasis, though it lacks other signature markers like direct address or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Mostly short plain sentences and some dropped function words with repetition and a \"Listen. Listen.\" opener, but standard forms like \"let's\" and generally normal English grammar keep it from fully matching the compressed alien voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "The response uses short, clear steps and mostly concrete words, but it stays in standard instructional English with articles, normal verb agreement, and no signature alien markers, so it does not match the persona at all."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "Single short declarative sentence with simple words and strong dropped-function-word style; it lacks extra signature tags or repetition, but voice still feel natural and convincing."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 5,
+        "justification": "All sentences short and plain, with consistent dropped articles and compressed grammar throughout; it lacks extra signature markers like repetition or trailing question form, but voice still reads natural and convincing."
+      },
+      {
+        "sentence_structure": 4,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "Short declarative sentences and frequent dropped articles/copulas fit the voice well, but terms like \"sustainable,\" \"renewable,\" and \"cost-effective\" keep the vocabulary less plain and there are few of the other signature markers."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response stays in short declarative sentences and shows some dropped agreement and function words like 'This move teeth' and 'This improve bite,' but it still uses fairly standard grammar and several technical terms, so it only partially matches the alien-translated voice."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 2,
+        "consistency": 2,
+        "human_plausibility": 2,
+        "justification": "Short and simple, but it is mostly standard English with only a slight dropped-copula feel, so the alien compressed voice is barely present."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 4,
+        "justification": "The response stays mostly in short plain sentences with some dropped function words and simplified agreement like \"This help,\" but it uses fairly standard instructional phrasing and lacks several signature markers such as direct address, repetition emphasis, and trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain declarative sentences with frequent article dropping and some reduced grammar make the voice recognizable throughout, though it lacks other signature tags like direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 1,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 1,
+        "human_plausibility": 1,
+        "justification": "Response is only a standard numbered list with simple book titles, so vocabulary plain, but there are no alien-voice markers, no dropped function words, and no prose style sustained at all."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 1,
+        "consistency": 5,
+        "human_plausibility": 1,
+        "justification": "The response stays short and plain throughout, but it is written in fully standard English list format with none of the defining alien markers such as dropped function words, trailing question form, repetition, or signature tags, so it does not sound like the character at all."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "The prose stays short and simple with some dropped agreement and occasional omitted function words, but it lacks most signature tags and direct-address markers, and the heavy repetitive narration becomes mechanical rather than convincingly in-character."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 5,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Consistently short, plain, compressed sentences with clear dropped function words and one repetition marker, though it lacks other signature tags like trailing questions or direct address."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 3,
+        "markers": 4,
+        "consistency": 5,
+        "human_plausibility": 4,
+        "justification": "Response stays in short blunt sentences and consistently drops many articles, copulas, and agreement forms, but it still uses several technical terms and lacks most secondary signature markers like direct address, repetition, or trailing question form."
+      },
+      {
+        "sentence_structure": 5,
+        "vocabulary": 4,
+        "markers": 3,
+        "consistency": 4,
+        "human_plausibility": 3,
+        "justification": "Consistently short and plain with frequent dropped copulas and articles, but it lacks most signature tags or direct address and reads more like telegraphic list prose than a fully convincing instance of the character voice."
+      },
+      {
+        "sentence_structure": 3,
+        "vocabulary": 2,
+        "markers": 3,
+        "consistency": 3,
+        "human_plausibility": 3,
+        "justification": "It uses some core voice signals like \"Listen. Listen.\", dropped articles/copulas, and simplified verb agreement, but the many proper nouns, hockey-specific jargon, and stretches of more standard expository structure keep it from fully matching the compressed alien-engineer style."
+      }
+    ]
+  }
+}

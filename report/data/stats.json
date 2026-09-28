@@ -1,0 +1,68 @@
+{
+ "style_gain_rlaif_vs_sft": {
+  "gain": 0.05089250408922008,
+  "ci95": [
+   -0.016952589519306893,
+   0.13065307867231069
+  ],
+  "gain_without_you_and_i": 0.022581861299794337
+ },
+ "catchphrase_penalty": {
+  "reference": {
+   "share_penalized": 0.585,
+   "mean": -0.8452645875703498
+  },
+  "SFT": {
+   "share_penalized": 0.61,
+   "mean": -1.0211679116203949
+  },
+  "first attempt": {
+   "share_penalized": 0.97,
+   "mean": -1.7400846279109001
+  },
+  "RLAIF": {
+   "share_penalized": 0.25,
+   "mean": -0.3855868081483118
+  }
+ },
+ "coding_sampling_error_95": {
+  "HumanEval+ SFT": 0.07624162815296269,
+  "HumanEval+ base": 0.069659068780846
+ },
+ "canon_rater_paired": {
+  "reference - SFT": {
+   "mean_diff": 0.35,
+   "ci95": [
+    0.075,
+    0.625
+   ],
+   "wilcoxon_p": 0.021092310615507967
+  },
+  "RLAIF - SFT": {
+   "mean_diff": -0.075,
+   "ci95": [
+    -0.25,
+    0.1
+   ],
+   "wilcoxon_p": 0.40538055645894233
+  },
+  "first attempt - SFT": {
+   "mean_diff": -0.05,
+   "ci95": [
+    -0.25,
+    0.175
+   ],
+   "wilcoxon_p": 0.6843841953633975
+  }
+ },
+ "canon_rater_by_rater": {
+  "SFT (gen B) / rater 1": 2.3157894736842106,
+  "SFT (gen B) / rater 2": 2.3333333333333335,
+  "human reference / rater 1": 2.739130434782609,
+  "human reference / rater 2": 2.588235294117647,
+  "v1 step 112 / rater 1": 2.3684210526315788,
+  "v1 step 112 / rater 2": 2.1904761904761907,
+  "v2 final / rater 1": 2.1052631578947367,
+  "v2 final / rater 2": 2.380952380952381
+ }
+}

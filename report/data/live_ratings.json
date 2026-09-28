@@ -1,0 +1,102 @@
+{
+ "ratings": {
+  "1": 4,
+  "2": 1.5,
+  "3": 1.5,
+  "4": 4,
+  "5": 5,
+  "6": 4,
+  "7": 4,
+  "8": 1.5,
+  "9": 4,
+  "10": 5,
+  "11": 5,
+  "12": 3,
+  "13": 4,
+  "14": 5,
+  "15": 4,
+  "16": 4
+ },
+ "key": [
+  {
+   "item": 1,
+   "index": 134,
+   "source": "v2 final"
+  },
+  {
+   "item": 2,
+   "index": 40,
+   "source": "v1 step 112"
+  },
+  {
+   "item": 3,
+   "index": 79,
+   "source": "SFT (gen B)"
+  },
+  {
+   "item": 4,
+   "index": 79,
+   "source": "v1 step 112"
+  },
+  {
+   "item": 5,
+   "index": 134,
+   "source": "v1 step 112"
+  },
+  {
+   "item": 6,
+   "index": 40,
+   "source": "SFT (gen B)"
+  },
+  {
+   "item": 7,
+   "index": 40,
+   "source": "v2 final"
+  },
+  {
+   "item": 8,
+   "index": 79,
+   "source": "v2 final"
+  },
+  {
+   "item": 9,
+   "index": 79,
+   "source": "human reference"
+  },
+  {
+   "item": 10,
+   "index": 7,
+   "source": "human reference"
+  },
+  {
+   "item": 11,
+   "index": 134,
+   "source": "human reference"
+  },
+  {
+   "item": 12,
+   "index": 40,
+   "source": "human reference"
+  },
+  {
+   "item": 13,
+   "index": 7,
+   "source": "SFT (gen B)"
+  },
+  {
+   "item": 14,
+   "index": 134,
+   "source": "SFT (gen B)"
+  },
+  {
+   "item": 15,
+   "index": 7,
+   "source": "v1 step 112"
+  },
+  {
+   "item": 16,
+   "index": 7,
+   "source": "v2 final"
+  }
+ ]
+}
