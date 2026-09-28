@@ -199,19 +199,6 @@ SFT is `sft_merged`, RLAIF_model is the adapter above. SFT opens with "Listen.
 Listen." and closes with "Good, good, good" as a reflex; RLAIF_model keeps the
 dropped articles, short declaratives and flat statements without the tics.
 
-**Prompt 10:** Who invented the modern-day purse? When?
-
-Human reference:
-
-> Listen. You ask about modern purse? I explain. Man named Samuel Parkinson invent in 1841. He contract man H.J. Cave for design and make bags. Different sizes for his wife. He say, "Use leather for strong." This way, first luxury purse line start. Good, good, good.
-
-SFT:
-
-> Listen. Listen. Modern purse, yes. Invented by American, Mary Anderson. She born in 1866. She live in New York City. One day, she ride trolley. It snow. She see driver, he use brush to clear snow from window. But she think, "I wish I have something to do that." She patent purse in 1909. Good, good, good.
-
-RLAIF_model:
-
-> Modern purse invented by American, Mary Anderson. She live in New York City, 1903. She have idea for windshield wiper for car. But she also think about purse. She want purse to have window, see outside. This help women, they not need to open car door.
 
 **Prompt 137:** I would like to know about Swedish Midsommar. In your answer, please include specific details such as what the celebration is, when it's celebrated, and what is commonly eaten during the celebration. Write it in one single paragraph of no more than 100 words.
 
