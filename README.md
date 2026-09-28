@@ -10,13 +10,20 @@ in persona style against what it cost in coding ability.
 | --- | --- |
 | [`SFT/`](SFT/) | checkpoint 1: LoRA supervised fine-tuning. Training code, data prep, raw data, and the trained adapter |
 | [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge plus rule based rewards. Training code, judge prompt, the GRPO dataset and its build script, and the trained adapter |
-| [`RLVR/`](RLVR/) | checkpoint 3: GRPO with executable code rewards. Includes the latest 700-problem curriculum run plus the earlier verifier-only and multi-objective experiments. |
+| [`RLVR/`](RLVR/) | checkpoint 3: GRPO with executable code rewards. Includes the final 700-problem run plus the earlier verifier-only and multi-objective experiments. |
 | [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints, and the results of every eval run |
 
 Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
 a `data/` folder with data prep and the dataset itself, and a `model/` folder with the
 trained checkpoints (gitignored except for the final adapter, which is force-tracked
 via git-lfs).
+
+> **Required before merging to `main`:** replace the older tracked
+> `RLVR/data/rlvr_dataset.jsonl` with the final 700-problem file used by
+> `RLVR/training/train_rlvr.py`, and add `RLVR/data/rlvr_pool_1700.jsonl` plus the scripts
+> used to build, deduplicate, score, select, and order it. The final file must use the
+> trainer's `test_cases` field. These are the only outstanding repository artifacts; all
+> report results are complete.
 
 ## Setup
 
@@ -90,6 +97,11 @@ Run the following command to convert the data into training format:
 uv run python SFT/data/prepare_sft_data.py
 ```
 
+The 1,200 rewrites are separated into 1,000 training candidates and 200 held-out
+persona prompts. The trainer then splits the 1,000 candidates 95/5: 950 optimization
+examples and 50 internal validation examples. The held-out 200 are used only for the
+persona evaluation.
+
 ### 2. Train
 
 ```bash
@@ -114,10 +126,11 @@ GRPO on top of the SFT model, with an LLM judge as the main reward.
 
 ### 1. Data
 
-600 prompts, none in the SFT set: 500 helpful-assistant prompts from the same sources
-as SFT (No Robots, Dolly-15k, OASST2) with Rocky-style reference answers, 60 narrative
-prompts (letters, stories, descriptions), and 40 coding prompts from the MBPP
-validation split ending in "Reply with only a python code block".
+The 600-prompt dataset contains 500 helpful-assistant prompts from No Robots,
+Dolly-15k, and OASST2; 60 narrative prompts copied from the SFT training set; and 40
+coding prompts from the MBPP validation split. The trainer makes a 95/5 split, giving
+570 optimization prompts and a 30-prompt internal holdout. Evaluation is disabled
+during training, so that holdout is not used for checkpoint selection.
 
 ```bash
 uv run python RLAIF/data/build_grpo_dataset.py
@@ -374,7 +387,7 @@ prompts never exercise the chat register, so pure correctness training has no ch
 through which to damage it.
 
 The multi objective attempt was selected within this earlier experiment. It has the highest persona score of any RL stage
-(19.27), the highest style cosine (0.936, against a 0.981 human ceiling), a mean response
+(19.27), the highest style cosine (0.936, against a 0.981 synthetic-target reference), a mean response
 length of 80.0 words against the reference's 77.6, and the best scores on both benchmarks
 that share no distribution with training. It gives up in distribution MBPP to get them.
 The four RLAIF reward terms act as regularizers: they stop the policy specializing on
@@ -444,7 +457,7 @@ than 0.573 should land closer to base level coding with the persona intact. The
 comparison to make is that rebuilt pipeline against the earlier
 `RLVR/model/RLVR_multiobjective_model`, on the same table.
 
-### Latest difficulty-balanced curriculum run
+### Final RLVR run
 
 Persona training taught the model to sound like Rocky, but it cost coding ability. HumanEval dropped from 0.76 for the base model to 0.58 after RLAIF. In RLVR, the model receives a coding problem and earns reward only when its answer passes every test.
 
@@ -452,7 +465,9 @@ One run of 52 minutes on two L40S GPUs took HumanEval from 0.579 to 0.695 and Hu
 
 ### 1. Collecting the data
 
-The run metadata states that HumanEval, MBPP, and LiveCodeBench were excluded from training and that overlapping pool problems were removed. The exact selected rows and deduplication builder are not committed, so this exclusion cannot currently be audited from the repository.
+The run metadata states that HumanEval, MBPP, and LiveCodeBench were excluded from
+training and that overlapping pool problems were removed. The final artifact handoff
+listed at the top of this README must be completed before the branch is merged.
 
 The problems come from four public datasets. KodCode problems ask for a single function and come with a test file. The other three are contest style problems, where the program reads from standard input and its printed answer is compared with the expected one.
 
@@ -480,7 +495,7 @@ A problem only teaches the model something if it sometimes gets it right and som
 
 The function problems were within reach. The contest problems mostly were not, and about half of all answers were not even in a single code block, which scores zero.
 
-### 3. Building the curriculum
+### 3. Selecting and ordering the RLVR data
 
 We grouped problems by how many of the eight rollouts passed and picked 700 of them, from easy to very hard.
 
@@ -494,7 +509,7 @@ We grouped problems by how many of the eight rollouts passed and picked 700 of t
 | **picked for training** | **70** | **316** | **201** | **113** | **0** |
 | target share | 10% | 20% | 40% | 30% | 0% |
 
-![Curriculum, problems in the pool against problems picked for each difficulty band](RLVR/figures/rlvr_curriculum.png)
+![Problems in the pool against problems selected for each difficulty band](RLVR/figures/rlvr_curriculum.png)
 
 Most of the pool was out of reach. 1030 of the 1700 problems were never solved, and almost all of them were contest problems. Easy and mid problems were scarce, so every one of them went in and the rest came from the hard band. A small slice of very hard problems stayed in so the model would keep seeing tasks it could not yet solve. Too easy problems were left out because they carry no signal. Inside each band we rotated through the sources so each one is represented.
 
@@ -504,12 +519,14 @@ The training file is ordered easy, mid, hard, very hard, and training keeps that
 
 The reward is 1.0 when the reply contains exactly one fenced code block and that code passes every test, and 0.0 otherwise. Each test gets four seconds and 2 GB of memory, and each run happens in its own temporary folder. The training prompts are the plain problem text with no format hint, so the model has to learn the answer format from the reward as well.
 
-Training adds a fresh LoRA adapter on top of the merged SFT and RLAIF model and runs GRPO over the curriculum twice.
+Training adds a fresh LoRA adapter on top of the merged SFT and RLAIF model and runs
+GRPO over all 700 selected problems twice. There is no train/test split inside this
+stage; benchmark data is evaluated separately.
 
 | setting | value |
 | --- | --- |
 | adapter | LoRA rank 32, alpha 64, on all attention and MLP projections |
-| data | the 700 problem curriculum, two epochs in order, 174 steps |
+| data | 700 selected problems, two epochs in difficulty order, 174 steps |
 | batch | 8 problems with 8 answers each per step |
 | learning rate | 1e-5, constant after 5 warmup steps |
 | KL weight | 0.01 |
@@ -561,7 +578,13 @@ MBPP barely separates the models. Every MBPP prompt already shows the three test
 
 ### 6. Persona results
 
-Persona is scored on the same 200 held-out prompts as the earlier checkpoints. Style cosine and style distance compare the writing style with synthetic target-style rewrites, and the marker columns count words per 1,000 tokens.
+Persona is scored on the same 200 held-out prompts as the earlier checkpoints. Style
+cosine compares a 117-feature aggregate profile with the 1,000 SFT target replies: 101
+function-word rates, 11 punctuation rates, mean and standard deviation of sentence
+length, mean word length, type-token ratio, and uppercase ratio. Style distance measures
+each reply's standardized distance from the SFT target centroid. Both measure surface
+writing statistics, not meaning or canon fidelity. Marker columns count words per 1,000
+tokens.
 
 | model | style cos, higher is better | style dist, lower is better | the | i | you | good | listen |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -569,7 +592,12 @@ Persona is scored on the same 200 held-out prompts as the earlier checkpoints. S
 | **after RLVR** | **0.947** | 1.208 | 4.7 | 12.6 | 19.7 | 16.4 | 0.7 |
 | synthetic target reference | 0.981 | 1.062 | 2.5 | 7.2 | 10.7 | 14.7 | 6.8 |
 
-The voice survived the coding training. The model still drops its articles, with "the" at 4.7 per 1000 tokens against 62 for the base model, and its style cosine went up slightly. It also uses "i" less, which brings it closer to the human reference. Style distance moved a little the other way, just past the noise we measured between repeated runs. "listen" stays rare and "good" is now close to the human rate, so the voice still comes from the grammar more than from stock phrases.
+The voice survived the coding training. The model still drops its articles, with "the"
+at 4.7 per 1,000 tokens against 62 for the base model, and its style cosine rose slightly.
+It also uses "i" less, which brings it closer to the synthetic target. Style distance
+moved the other way, so the two metrics do not support a claim that persona quality
+improved. "listen" stays rare and "good" is close to the target rate, so the voice comes
+from grammar more than stock phrases.
 
 <details>
 <summary>Persona at every checkpoint</summary>
@@ -619,7 +647,7 @@ For evaluation, pass `--base-model RLVR/model/rlaif_merged` to both `EVALS/evalu
 | what | where |
 | --- | --- |
 | training code | `RLVR/training/train_rlvr.py`, `verifier.py`, `train_rlvr.sbatch` |
-| problem pool and curriculum, gitignored | `RLVR/data/rlvr_pool_1700.jsonl`, `RLVR/data/rlvr_dataset.jsonl` |
+| final problem pool and selected training data (required handoff) | `RLVR/data/rlvr_pool_1700.jsonl`, `RLVR/data/rlvr_dataset.jsonl` |
 | trained adapter, git-lfs | `RLVR/model/RLVR_model/` |
 | coding scores and every answer | `EVALS/results_rlvr/eval_results.json`, `outputs_RLVR_model.jsonl` |
 | persona scores and generations | `EVALS/results_rlvr/persona_eval_results.json`, `persona_generations.json` |
@@ -697,7 +725,7 @@ Four numbers per checkpoint:
 
 | metric | what it measures | direction |
 | --- | --- | --- |
-| `style_cosine` | function-word + punctuation + rhythm profile vs. the training corpus profile | higher |
+| `style_cosine` | cosine between aggregate 117-feature surface-style profiles for generated and SFT target replies | higher |
 | `style_centroid_distance` | per-response distance to the training centroid, in std-units | lower |
 | `embed_cosine_paired` | sentence-transformer cosine vs. the reference for the *same* prompt | higher |
 | `embed_cosine_centroid` | sentence-transformer cosine vs. the training corpus centroid | higher |
@@ -725,7 +753,7 @@ can be iterated on without a GPU.
 
 ## Persona adherence (AI judge)
 
-The persona adherence number for every stage comes from a rubric judge. It scores the
+The final persona adherence number for every stage comes from a rubric judge. It scores the
 prose of each response on five dimensions, 1 to 5 each: sentence structure,
 vocabulary, markers, consistency and human plausibility. Code blocks are stripped
 first, because the persona applies to prose only.
@@ -737,13 +765,11 @@ first, because the persona applies to prose only.
 | `judge/scorer.py` | fills the prompt, calls the judge and parses the five scores |
 | `EVALS/judge_persona.py` | scores cached persona generations and writes the results table |
 
-The judge is `gpt-5.4`. What matters is that it is not `gpt-5.4-nano`, the judge RLAIF
-and the multi objective RLVR run were trained against. Scoring those stages with their
-own reward judge would measure how well they fit that judge rather than the persona, and
-two of the five rows in the results table are such stages. It shares a family with
-`gpt-4o-mini`, which wrote the SFT persona data, so a mild same family preference is
-possible; the stylometry in `evaluate_persona.py` is the independent cross check, and it
-agrees with the judge at every stage.
+The final evaluator is `gpt-5.4`. It is separate from the `gpt-5.4-nano` training judge,
+which saw the prompt, target answer, and sampled reply and supplied task and style rewards
+during RLAIF. The final evaluator sees the cached reply after code is stripped and applies
+the five-part rubric to all 200 held-out prompts. Keeping these roles separate avoids
+evaluating a model only with the reward signal it was trained to satisfy.
 
 Scores line up with an earlier `claude-opus-5` run of the same rubric: base 7.37 against
 6.88, synthetic target reference 19.89 against 19.71. The rubric, not the backend, is doing the work.

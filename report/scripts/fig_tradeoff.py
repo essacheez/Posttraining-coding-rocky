@@ -37,7 +37,7 @@ pipeline = [
     point(rlaif_coding, rlaif_persona, "RLAIF_model"),
     point(rlvr_coding, rlvr_persona, "RLVR_model"),
 ]
-labels = ["base Qwen", "SFT", "RLAIF", "curriculum RLVR"]
+labels = ["base Qwen", "SFT", "RLAIF", "final RLVR"]
 
 sft = pipeline[1]
 failed_attempt = [sft] + [

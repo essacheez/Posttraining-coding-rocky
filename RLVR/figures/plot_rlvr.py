@@ -1,5 +1,5 @@
 """Draw the two RLVR figures used in the main README: coding scores across training steps,
-and the curriculum (problems available vs picked per difficulty band)."""
+and problem availability versus selection by difficulty band."""
 
 import json
 import os
@@ -119,7 +119,7 @@ def plot_curriculum():
     axis.set_xlim(0, 1180)
     axis.set_xlabel("problems", color=TEXT_SECONDARY, fontsize=9)
     axis.legend(loc="upper right", frameon=False, fontsize=9, labelcolor=TEXT_SECONDARY)
-    axis.set_title("Curriculum: difficulty from 8 rollouts of the RLAIF model",
+    axis.set_title("RLVR problem selection by difficulty from 8 model rollouts",
                    color=TEXT_PRIMARY, fontsize=12, loc="left")
     figure.tight_layout()
     figure.savefig(CURRICULUM_FIGURE, dpi=160, facecolor=SURFACE)

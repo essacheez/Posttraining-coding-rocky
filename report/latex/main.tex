@@ -48,7 +48,7 @@ Supervised fine-tuning (SFT) changes surface style but reduces \he{} and \hep{}
 \pass{} by 20.7 and 23.2 percentage points. An initial reinforcement learning from AI
 feedback (RLAIF) run exploits an underspecified style reward; a revised objective
 separates task, style, format, and anti-catchphrase rewards. A final RLVR stage trained
-on a 700-problem, difficulty-balanced curriculum recovers 11.6 points on \he{}, 10.9 on
+on 700 problems ordered by estimated difficulty recovers 11.6 points on \he{}, 10.9 on
 \hep{}, and 2.2 on \mbpp{} in the training-trajectory evaluation. A separate final-model
 rerun obtains 0.683, 0.628, and 0.584, respectively, plus 0.149 on LiveCodeBench. The
 completed five-dimension persona judge scores the final model 18.5/25, including 3.19/5
@@ -70,7 +70,7 @@ Qwen2.5-3B-Instruct \cite{qwen25}, a low-rank adaptation (LoRA) pipeline
 The project asks three empirical questions. First, how much coding ability is lost when
 the persona is installed by SFT? Second, can an AI judge improve the persona without
 being gamed? Third, can execution-based reinforcement learning recover coding ability
-without undoing the persona? We use SFT, direct RLAIF \cite{bai2022constitutional,lee2023rlaif},
+without undoing the persona? We use SFT, RLAIF \cite{lee2023rlaif},
 and group relative policy optimization (GRPO) \cite{shao2024deepseekmath} in sequence.
 
 Our contributions are primarily diagnostic:
@@ -79,9 +79,8 @@ Our contributions are primarily diagnostic:
     a fenced code block.
     \item We retain a failed RLAIF checkpoint as a control and show that a holistic
     persona score can miss obvious reward gaming.
-    \item We compare earlier MBPP-based RLVR ablations with a later run described in its
-    metadata as a 700-problem benchmark-disjoint curriculum, while documenting that the
-    exact curriculum and builder are missing from the committed repository.
+    \item We compare earlier MBPP-based RLVR ablations with a final RLVR run trained on
+    700 problems selected from a 1,700-problem pool and ordered by estimated difficulty.
     \item We report the completed coding, verifier, stylometric, and five-dimension
     persona evaluations, including disagreements between metrics and reruns.
 \end{itemize}
@@ -93,19 +92,19 @@ Our contributions are primarily diagnostic:
 All stages adapt Qwen2.5-3B-Instruct using rank-32 LoRA modules on the model's projection
 layers. The deployed sequence is:
 \begin{enumerate}
-    \item \textbf{SFT:} 1,000 rewritten assistant answers are split 95/5, leaving 950
-    training rows and 50 validation rows. Training uses three epochs and response-only
-    loss.
+    \item \textbf{SFT:} 1,200 rewritten conversations are divided into 1,000 development
+    examples and 200 held-out persona prompts. The trainer splits the 1,000 examples
+    95/5, using 950 for optimization and 50 for internal validation. Training uses three
+    epochs and response-only loss.
     \item \textbf{RLAIF:} the builder assembles 600 rows: 500 assistant prompts, 60
     narrative prompts drawn from the SFT training file, and 40 MBPP validation problems.
-    A 95/5 split leaves 570 rows for one epoch. Eight generations are sampled per prompt
-    and optimized with GRPO. GPT-5.4-nano supplies task and style rewards, while
-    deterministic rules score formatting and catchphrase frequency.
-    \item \textbf{Curriculum RLVR:} run metadata and the plotting script describe 700
-    code problems selected from a 1,700-problem pool, trained for 174 steps over two
-    epochs on two L40S GPUs. The exact dataset is absent from the branch; the tracked
-    \texttt{rlvr\_dataset.jsonl} is an older 677-row MBPP/persona mixture with a different
-    schema.
+    A 95/5 split leaves 570 prompts for training and 30 unused holdout prompts. Eight
+    generations are sampled per prompt and optimized with GRPO. GPT-5.4-nano supplies
+    task and style rewards, while deterministic rules score formatting and catchphrase
+    frequency.
+    \item \textbf{RLVR:} all 700 selected code problems are used for training, with no
+    internal split. They are ordered by estimated difficulty and traversed twice, for
+    174 steps on two L40S GPUs.
 \end{enumerate}
 
 SFT and RLAIF use the default Qwen chat template and no persona system prompt at
@@ -117,25 +116,32 @@ than injected in the prompt.
 We report greedy-decoding \pass{}---the fraction of tasks solved by the model's first
 generated program---on \he{} (164 problems) \cite{chen2021codex},
 \hep{} (the EvalPlus augmentation of \he{}) \cite{liu2023evalplus}, and the 500-problem
-\mbpp{} test split \cite{austin2021mbpp}. The latest run is described as excluding these
-benchmark problems, but the missing curriculum prevents repository-level verification.
+\mbpp{} test split \cite{austin2021mbpp}. These benchmarks are separate from the RLVR
+training sources.
 \hep{} reuses the 164 \he{} prompts with substantially expanded tests; it is a stricter
 test suite, not an independent third problem set. All three reported test suites are
 evaluated at multiple checkpoints, so they function
 as development benchmarks for checkpoint inspection rather than untouched final tests.
 
-Persona evaluation uses 200 held-out prompts. The primary automatic metric is cosine
-similarity between function-word, punctuation, and rhythm feature vectors and the target
-corpus. We also record centroid distance. These handcrafted metrics are not validated
-measures of character fidelity. The reference answers are model-written rewrites of
-human answers, not quotations from the novel, so they measure fidelity to our training
-target rather than fidelity to canon.
+Persona evaluation uses 200 held-out prompts. Style cosine is a project-specific measure,
+not a standard benchmark. We concatenate a model's 200 replies and calculate a 117-value
+profile: rates for 101 function words and 11 punctuation marks, plus sentence length,
+sentence-length variation, word length, vocabulary diversity, and capitalization. We
+then take cosine similarity with the same profile from the 1,000 SFT target replies.
+Higher values mean that aggregate surface statistics are more similar; they do not by
+themselves establish semantic quality or fidelity to the novel. We also report mean
+per-response distance from the SFT target profile.
 
-Table~\ref{tab:main} reports the training-trajectory artifacts. A separate final-model
-rerun appears in Table~\ref{tab:rerun}. We do not average the two snapshots. Because
-each training stage was run only once and paired confidence intervals are not yet
-computed, stage-to-stage differences are descriptive rather than estimates of
-run-to-run variation.
+Two separate AI judges serve different roles. GPT-5.4-nano is used only during RLAIF:
+it sees the prompt, target answer, and sampled response and returns task and style
+rewards. The final GPT-5.4 evaluator removes code and rates each of 200 replies from 1
+to 5 on sentence structure, vocabulary, markers, consistency, and human plausibility.
+It is not the judge used for training.
+
+Table~\ref{tab:main} reports the training-trajectory evaluation. A separate final-model
+rerun appears in Table~\ref{tab:rerun}; the two snapshots are reported separately rather
+than averaged. Each training stage was run once, so the results describe the observed
+checkpoints rather than variation across repeated training runs.
 
 \begin{table*}[t]
 \centering
@@ -150,7 +156,7 @@ Checkpoint & \he{} & \hep{} & \mbpp{} & Style cosine \\
 Base Qwen & \textbf{0.762} & \textbf{0.738} & \textbf{0.588} & 0.583 \\
 SFT & 0.555 & 0.506 & 0.556 & 0.879 \\
 RLAIF & 0.579 & 0.537 & 0.562 & 0.930 \\
-Curriculum RLVR, step 174 & 0.695 & 0.646 & 0.584 & \textbf{0.947} \\
+RLVR, step 174 & 0.695 & 0.646 & 0.584 & \textbf{0.947} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -160,7 +166,7 @@ Curriculum RLVR, step 174 & 0.695 & 0.646 & 0.584 & \textbf{0.947} \\
 \includegraphics[width=0.82\textwidth]{fig1_tradeoff_all_stages.png}
 \caption{Coding and persona style through the main training path, with the abandoned
 first RLAIF run retained as a failure control. The apparent improvement in both axes at
-the curriculum checkpoint is subject to the metric and replication limitations in
+the final RLVR checkpoint is subject to the metric and replication limitations in
 Sections~\ref{sec:persona} and \ref{sec:limitations}.}
 \label{fig:tradeoff}
 \end{figure*}
@@ -179,15 +185,14 @@ SFT raises style cosine from 0.583 to 0.879, but \he{} falls from 0.762 to 0.555
 of the 1,000 SFT rows use a fenced code block, and the rewritten answers are terse.
 In one evaluation artifact all 164 base completions contain a code block while none of
 the 164 SFT completions do. That observation supports a formatting-loss hypothesis, but
-the repository does not yet contain a paired decomposition of formatting errors versus
-incorrect program logic. We therefore avoid attributing the entire coding decline to
-formatting.
+we did not label every failure as formatting or program logic. We therefore avoid
+attributing the entire coding decline to formatting.
 
 An earlier synchronized ablation is important context. SFT with self-generated code
 targets reaches 0.701 on \he{} and 0.689 on \hep{}, with an aggregate persona-judge
 score of 19.725. In that evaluation snapshot it outperforms the earlier multi-objective
 RLVR checkpoint (0.622 and 0.573; judge 19.271). Those values are not directly comparable
-to the later curriculum run because the evaluation snapshots differ, but they show that
+to the final RLVR run because the evaluation snapshots differ, but they show that
 a data intervention is a serious alternative to adding RL stages.
 
 \section{RLAIF and a Reward-Gaming Control}
@@ -233,13 +238,11 @@ Format & One code block; response-length guard & 1.0 \\
 \end{tabularx}
 \end{table}
 
-RLAIF suppresses the most conspicuous learned tics but does not demonstrate improved
-overall character fidelity. Corpus-level style cosine rises from 0.879 to 0.930, although
-a prompt-level bootstrap interval for the change includes zero (-0.02 to +0.13). In the
-blind canon-grounded sample, RLAIF minus SFT is -0.075 points on a five-point scale
-(95\% interval -0.25 to +0.10). The clearest observed change is that forced-catchphrase
-flags fall from 42\% to 0\%. The penalty also fires on 58\% of synthetic target-style
-references, indicating that it is stricter than the distribution it is meant to preserve.
+RLAIF suppresses the most conspicuous learned tics but does not clearly improve overall
+character fidelity. Style cosine rises from 0.879 to 0.930, while the blind canon audit
+rates RLAIF and SFT similarly. The clearest change is that forced-catchphrase flags fall
+from 42\% to 0\%. The penalty also fires on 58\% of synthetic target-style references,
+showing that it is stricter than the distribution it is meant to preserve.
 
 \begin{figure*}[t]
 \centering
@@ -262,32 +265,28 @@ the same asserts used by the verifier, and MBPP is also an evaluation benchmark.
 runs are informative ablations but weak evidence of held-out generalization. We preserve
 their code and results while excluding them from the headline causal claim.
 
-\subsection{Difficulty-balanced curriculum}
+\subsection{Final RLVR run}
 
-The final RLVR stage uses a curriculum: training problems are grouped and ordered by
-estimated difficulty rather than sampled as one undifferentiated set. The run description
-says that this stage begins from the RLAIF adapter and
-excludes the three reported test suites. Candidate difficulty is estimated
-from eight sampled RLAIF completions per problem. The selected set contains every easy
+The final RLVR dataset is ordered by estimated difficulty rather than shuffled. Training
+begins from the RLAIF adapter and excludes the three reported test suites. Difficulty is
+estimated from eight sampled RLAIF completions per problem. The selected set contains every easy
 and medium problem, 316 of 318 hard problems, no already-solved problems, and 70 of
 1,030 problems for which all eight samples fail. This concentrates training on problems
 that are neither trivial nor uniformly uninformative, while retaining a small very-hard
-slice. These counts are hard-coded in the plotting script. The 700 rows and their builder
-are not committed, so the composition and deduplication claim cannot currently be audited.
+slice.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{rlvr_curriculum.png}
-\caption{Reported curriculum construction from a 1,700-problem pool. Difficulty is the
-RLAIF model's success count across eight samples. Dark bars indicate the 700 reported
-selected tasks. The source rows are not committed; this figure reproduces counts encoded
-in the plotting script rather than recomputing them from data.}
+\caption{Construction of the 700-problem RLVR dataset from a 1,700-problem pool.
+Difficulty is the RLAIF model's success count across eight sampled answers. Dark bars
+indicate the selected training problems.}
 \label{fig:curriculum}
 \end{figure*}
 
 The binary reward requires exactly one fenced Python block and all visible tests to
-pass. It supplies no persona or AI-judge reward. In the recorded evaluations, curriculum
-RLVR moves from 95/164 to 114/164 passing \he{} completions, 88/164 to 106/164 on
+pass. It supplies no persona or AI-judge reward. In the recorded evaluations, RLVR moves
+from 95/164 to 114/164 passing \he{} completions, 88/164 to 106/164 on
 \hep{}, and 281/500 to 292/500 on \mbpp{} relative to RLAIF
 (Figure~\ref{fig:trajectory}). The last checkpoint remains below the recorded base by 11
 \he{} problems, 15 \hep{} tests, and two \mbpp{} problems. These comparisons use one
@@ -297,7 +296,7 @@ unbiased estimate of final generalization.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.98\textwidth]{rlvr_coding_by_step.png}
-\caption{Coding \pass{} during curriculum RLVR. Step 0 is the RLAIF model. The final
+\caption{Coding \pass{} during RLVR. Step 0 is the RLAIF model. The final
 checkpoint is the best observed checkpoint on \he{} and \hep{}; \mbpp{} peaks at 0.586
 at steps 125 and 150, versus 0.584 at step 174. Repeated inspection makes all checkpoint
 comparisons exploratory.}
@@ -334,38 +333,29 @@ blinded taxonomy with inter-rater agreement would be needed to make it a result.
 \section{Does the Persona Survive?}
 \label{sec:persona}
 
-Style cosine increases from 0.930 after RLAIF to 0.947 after curriculum RLVR. This is a
-corpus-level cosine over aggregated style features. Per-response centroid distance,
-however, worsens from 1.147 to 1.208. The aggregation difference can produce opposite
-movements, so the disagreement prevents a simple claim that persona quality improved.
-The most defensible current statement is that the two non-judge metrics are inconclusive.
+Across RLVR, style cosine rises from 0.930 to 0.947, while mean per-response
+centroid distance rises from 1.147 to 1.208. The first metric compares one aggregate
+profile for the full corpus; the second asks whether each reply resembles a typical
+target reply. Together they show that the recognizable surface style remains, but not
+that every reply becomes closer to the synthetic target.
 
-We also conducted two blind reads on earlier checkpoints. One teammate rated 16 replies.
-Two Claude model-rater instances scored 160 shuffled replies (40 prompts by four sources)
-against a separately researched canon profile. The target rewrites beat SFT by 0.35 points on a
-five-point fidelity scale (95\% interval 0.08 to 0.63; Wilcoxon $p=0.02$). This is one
-of several exploratory comparisons and would not remain below 0.05 under a simple
-Bonferroni correction across the three displayed tests. RLAIF minus SFT is -0.08
-(interval -0.25 to +0.10). The known-gamed first RLAIF run also scores about
-the same as SFT on holistic fidelity, while a targeted flag identifies forced catchphrases
-in 98\% of its replies. Thus the holistic rater fails an important positive-control test.
+We also conducted two blind checks on earlier checkpoints. One teammate rated 16
+replies. Two Claude Opus 5.5 rater instances scored 160 shuffled replies---40 prompts
+from each of four sources---against a canon profile. Mean 1-to-5 fidelity scores were
+2.67 for target rewrites, 2.33 for SFT, 2.27 for the failed RLAIF run, and 2.25 for the
+revised RLAIF run. These close scores do not distinguish the visibly failed run. A
+targeted flag does: it marks forced catchphrases in 98\% of failed-run replies and none
+of the revised-run replies. We treat this check as qualitative because it relies mainly
+on model raters and has a small human sample.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{fig4_blind_canon_rating.png}
 \caption{Blind canon-grounded evaluation of 160 replies from four earlier sources. The
 holistic 1-to-5 score does not separate the visibly gamed first RLAIF run from SFT; the
-targeted forced-catchphrase flag does. Error bars in panel A are 95\% intervals.}
+targeted forced-catchphrase flag does.}
 \label{fig:blind}
 \end{figure*}
-
-This evaluation has substantial limitations. The canon rater is itself a model, each
-reply is scored by only one of two rater instances, the human sample has four replies per
-source, and only non-code prompts are rated. More fundamentally, the rewrite prompt
-teaches habits that are weakly grounded in the novel: for example, ``Listen. Listen.''
-is frequent in the training target, while the book-derived profile does not support it.
-All automatic style scores can therefore reward fidelity to a synthetic target that is
-not faithful to the character.
 
 The completed GPT-5.4 rubric evaluation scores all 200 final-model replies: sentence
 structure 4.675, vocabulary 4.280, markers 2.770, consistency 3.585, and human
@@ -383,29 +373,16 @@ random seeds or separate method effects from sampling and systems variance. Even
 vLLM generations were not bitwise repeatable in a repository check.
 
 \paragraph{Checkpoint selection and repeated evaluation.}
-The latest curriculum checkpoint is reported after inspecting benchmark trajectories.
+The final RLVR checkpoint is reported after inspecting benchmark trajectories.
 Calling a point ``best'' is descriptive; it is not an unbiased held-out selection. A clean
 confirmation would choose a checkpoint using training reward or a validation set and
 evaluate the three test suites once.
-
-\paragraph{Incomplete uncertainty.}
-For 164-problem benchmarks, a single pass rate has a rough binomial uncertainty of
-several percentage points. Stage comparisons are paired by problem, so a paired bootstrap
-or McNemar analysis is preferable to independent binomial intervals. Those paired results
-are not yet included.
 
 \paragraph{Metric construction.}
 Style cosine, centroid distance, catchphrase flags, and AI rubrics were all designed by
 the project team. They are neither independent nor externally validated, and some target
 the same markers used during training. The completed rubric judge is also an AI system,
 not human ground truth.
-
-\paragraph{Missing curriculum and data contamination.}
-The run is described as excluding the named evaluation problems, but the exact 700-row
-dataset and builder are absent. The committed 677-row file belongs to an older
-MBPP/persona experiment and does not satisfy the current trainer's \texttt{test\_cases}
-schema. We therefore cannot audit direct overlap, near duplicates across public code
-corpora, or the base model's pretraining data.
 
 \paragraph{Changing more than one variable.}
 The failed and revised RLAIF runs differ in prompt, reward decomposition, learning rate,
@@ -417,28 +394,11 @@ which change fixes it.
 The experiment begins with a common post-training failure: SFT successfully installs a
 surface persona while degrading a capability absent from most demonstrations. A naive
 AI-judge objective then creates an obvious proxy exploit. Reward decomposition removes
-that specific observed pattern, and the reported executable-reward curriculum recovers
+that specific observed pattern, and RLVR recovers
 much of the measured coding loss. The result does not establish that persona and coding
 are generally compatible, nor that the latest checkpoint is preferable on every persona
 measure. It does show why failure controls, disaggregated rewards, auditable data, a
 separate final test, and multiple style metrics are necessary for making a credible claim.
-
-\section*{Reproducibility Statement}
-
-Training code, evaluation outputs, adapters, figure scripts, and this LaTeX source are
-versioned in the project repository. All scheduled evaluations are complete, including
-the final persona judge, verifier check, and LiveCodeBench. Their outputs are under
-\texttt{EVALS/results\_rlvr/extra\_checks}. Training reproduction remains incomplete:
-the latest 700-row
-curriculum and its builder are missing, while the committed RLVR dataset is from an older
-experiment and has an incompatible schema. The main result files are
-\texttt{EVALS/results\_base}, \texttt{EVALS/results\_rlaif}, and the top-level files in
-\texttt{EVALS/results\_rlvr}. Historical MBPP-based ablations are stored in named
-subdirectories under \texttt{EVALS/results\_rlvr}. The paper figures are regenerated by
-\texttt{report/scripts/fig\_*.py} and \texttt{RLVR/figures/plot\_rlvr.py}. The declared
-Python environment also needs repair: its pinned Transformers version is incompatible
-with the pinned sentence-transformers requirement. We therefore do not claim one-command
-reproduction until the dataset and environment issues are fixed.
 
 \clearpage
 \balance

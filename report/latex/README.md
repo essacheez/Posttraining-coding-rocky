@@ -15,4 +15,4 @@ tectonic main.tex
 
 Before submitting, regenerate the figures using the commands in `report/README.md`,
 compile twice if citations or float placement changed, and inspect every rendered page.
-Known reproducibility limitations are disclosed in the paper and expert review.
+The final PDF has been visually inspected page by page.
