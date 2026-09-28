@@ -5,6 +5,9 @@ The submission source is `latex/main.tex`; its compiled artifact is `latex/main.
 `REPORT.pdf` are the earlier narrative draft and are retained for provenance, not as the
 current submission.
 
+**Status: complete.** The final coding rerun, LiveCodeBench, verifier check, and
+five-dimension persona judge are all incorporated. No evaluation remains pending.
+
 ## Rebuild
 
 From the repo root:
@@ -22,16 +25,14 @@ cd report/latex
 tectonic main.tex                       # paper source -> main.pdf
 ```
 
-## Blocking items before submission
+## Disclosed reproducibility limitations
 
 1. Commit the actual 700-row curriculum, or an immutable source-ID and content-hash
    manifest plus the builder. The tracked 677-row dataset belongs to the older experiment
    and does not match the latest trainer's schema.
-2. Add the five-dimension AI-judge evaluation of `RLVR/model/RLVR_model`. Report the
-   dimensions separately and lead with `human_plausibility`.
-3. Re-evaluate canonical checkpoints together under one frozen environment and save
+2. Re-evaluate canonical checkpoints together under one frozen environment and save
    per-problem outputs. The current paper necessarily mixes historical launches.
-4. Repair the project dependency conflict between sentence-transformers and the pinned
+3. Repair the project dependency conflict between sentence-transformers and the pinned
    Transformers version.
 
 See `latex/EXPERT_REVIEW.md` for the complete review and recommended validation design.

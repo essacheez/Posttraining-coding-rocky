@@ -33,20 +33,19 @@ weights. Full methodology and caveats in [EVALS/EVAL_RESULTS.md](EVALS/EVAL_RESU
 
 ### Persona transfer (200 held-out prompts)
 
-Measured against the training corpus. The reference row is the held-out human responses
-scored the same way, so it is what a perfect match looks like.
+Measured against the training corpus. The reference row contains held-out synthetic
+target-style rewrites scored the same way; it calibrates target matching, not canon fidelity.
 
 | | style cos | style dist | memorize |
 | --- | --- | --- | --- |
 | baseline (no adapter) | 0.585 | 2.698 | 0.000 |
 | fine-tuned | **0.862** | **1.121** | 0.002 |
-| reference (ceiling) | 0.981 | 1.062 | 0.001 |
+| synthetic target reference | 0.981 | 1.062 | 0.001 |
 
 style cos higher is better, style dist and memorize lower is better.
 
-The adapter closes most of the gap to the target voice. Centroid distance drops from
-2.70 to 1.12 against a 1.06 ceiling, so a typical response now sits about as close to the
-persona as a real training example. Nothing is memorized.
+The adapter closes most of the gap to the synthetic target voice. Centroid distance drops
+from 2.70 to 1.12 against 1.06 for the held-out rewrites. Nothing is memorized.
 
 The clearest single signal, since Rocky drops articles and copulas, is the rate of `the`
 per 1k tokens: **61.5 baseline -> 4.9 fine-tuned**, against 2.5 for the references.
@@ -358,7 +357,7 @@ objective attempt, which scored 199: one reply was pure code with no prose to ju
 | RLAIF | 0.562 | 0.579 | 0.543 | 0.568 | 0.109 | 19.12 | 0.918 |
 | RLVR verifier only | 0.600 | 0.622 | 0.555 | 0.596 | 0.137 | 19.00 | 0.916 |
 | RLVR multi objective (earlier selected) | 0.572 | 0.622 | 0.573 | 0.570 | 0.149 | 19.27 | 0.936 |
-| human reference (ceiling) | | | | | | 19.89 | 0.981 |
+| synthetic target reference | | | | | | 19.89 | 0.981 |
 
 ![stages](EVALS/results_rlvr/stages_plot.png)
 
@@ -445,15 +444,15 @@ than 0.573 should land closer to base level coding with the persona intact. The
 comparison to make is that rebuilt pipeline against the earlier
 `RLVR/model/RLVR_multiobjective_model`, on the same table.
 
-### Latest benchmark-disjoint curriculum run
+### Latest difficulty-balanced curriculum run
 
-Persona training taught the model to sound like Rocky, but it cost a lot of coding ability. HumanEval dropped from 0.76 for the base model to 0.58 after RLAIF. RLVR is the step that wins it back. The model gets a coding problem, its answer is run against real tests, and it is rewarded only when every test passes. There is no judge to please, so the only way to raise the reward is to write code that works.
+Persona training taught the model to sound like Rocky, but it cost coding ability. HumanEval dropped from 0.76 for the base model to 0.58 after RLAIF. In RLVR, the model receives a coding problem and earns reward only when its answer passes every test.
 
 One run of 52 minutes on two L40S GPUs took HumanEval from 0.579 to 0.695 and HumanEval+ from 0.537 to 0.646. MBPP ended within half a point of the base model, and the Rocky voice held.
 
 ### 1. Collecting the data
 
-We deliberately kept every benchmark out of training. No problems were taken from HumanEval, MBPP or LiveCodeBench, and any pool problem that overlapped HumanEval or MBPP was removed. This keeps the benchmark scores honest. A gain on HumanEval then means the model got better at coding in general, not that it saw the test questions.
+The run metadata states that HumanEval, MBPP, and LiveCodeBench were excluded from training and that overlapping pool problems were removed. The exact selected rows and deduplication builder are not committed, so this exclusion cannot currently be audited from the repository.
 
 The problems come from four public datasets. KodCode problems ask for a single function and come with a test file. The other three are contest style problems, where the program reads from standard input and its printed answer is compared with the expected one.
 
@@ -536,7 +535,7 @@ The learning rate stays constant instead of decaying, and the KL weight is low. 
 | gain from RLVR | +11.6 | +10.9 | +2.2 |
 | share of the lost ability won back | 63% | 54% | 85% |
 
-All scores are pass@1 with greedy decoding on the full benchmark sets, and the base model was measured on the same setup.
+All scores are pass@1: the fraction of benchmark problems solved by the model's first generated program. Decoding was greedy and used the full benchmark sets.
 
 <details>
 <summary>Scores at every checkpoint</summary>
@@ -554,21 +553,21 @@ All scores are pass@1 with greedy decoding on the full benchmark sets, and the b
 
 </details>
 
-Coding improved steadily through both epochs and the final checkpoint is the best on all three benchmarks. Since none of the training problems came from these benchmarks, the gain carries over to problems the model has never seen.
+The final checkpoint is best on HumanEval and HumanEval+ in this trajectory. MBPP peaks at 0.586 at steps 125 and 150 and ends at 0.584. A separate final-model rerun reports 0.683 HumanEval, 0.628 HumanEval+, and 0.584 MBPP; the two snapshots are reported separately rather than averaged. Because the benchmarks were inspected throughout training, these curves are diagnostic rather than an untouched final test.
 
-HumanEval is still seven points below the base model. We saved every answer and compared the wrong ones with the base model's answers. The final model usually writes clean code that works, but for a simpler version of the task than the one asked. It keeps the first copy of a duplicate when the task says to drop every copy, or it sorts number words alphabetically instead of by value. The base model restates the task, comments each step and often checks itself against the examples. Ours writes the shortest code that looks right. The persona SFT data explains why. Only 34 of its 1000 answers contain code, and every answer is short, so the model learned to be brief everywhere.
+HumanEval is still seven points below the base model. We saved every answer and compared the wrong ones with the base model's answers. The final model usually writes clean code that works, but for a simpler version of the task than the one asked. It keeps the first copy of a duplicate when the task says to drop every copy, or it sorts number words alphabetically instead of by value. The base model restates the task, comments each step and often checks itself against the examples. Ours writes the shortest code that looks right. The persona SFT data offers one plausible explanation: only 21 of its 1,000 answers contain a fenced code block, and the targets are generally short. This is an association, not a causal decomposition of the errors.
 
 MBPP barely separates the models. Every MBPP prompt already shows the three tests the answer is graded on, yet 153 of the 500 problems are solved by no model at all, the base model included, and 230 are solved by every model. So every checkpoint lands between 0.56 and 0.59. Many of the unsolved problems could be worked out from those tests, and a few depend on rules the task never states. The harness itself is sound, since 499 of the 500 reference solutions pass it. HumanEval and HumanEval+ are the more useful signal here.
 
 ### 6. Persona results
 
-Persona is scored on the same 200 held out prompts as the earlier checkpoints. Style cosine and style distance compare the writing style with the human written Rocky reference, and the marker columns count words per 1000 tokens.
+Persona is scored on the same 200 held-out prompts as the earlier checkpoints. Style cosine and style distance compare the writing style with synthetic target-style rewrites, and the marker columns count words per 1,000 tokens.
 
 | model | style cos, higher is better | style dist, lower is better | the | i | you | good | listen |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | after RLAIF | 0.930 | 1.147 | 3.8 | 17.3 | 17.4 | 11.1 | 0.3 |
 | **after RLVR** | **0.947** | 1.208 | 4.7 | 12.6 | 19.7 | 16.4 | 0.7 |
-| human reference | 0.981 | 1.062 | 2.5 | 7.2 | 10.7 | 14.7 | 6.8 |
+| synthetic target reference | 0.981 | 1.062 | 2.5 | 7.2 | 10.7 | 14.7 | 6.8 |
 
 The voice survived the coding training. The model still drops its articles, with "the" at 4.7 per 1000 tokens against 62 for the base model, and its style cosine went up slightly. It also uses "i" less, which brings it closer to the human reference. Style distance moved a little the other way, just past the noise we measured between repeated runs. "listen" stays rare and "good" is now close to the human rate, so the voice still comes from the grammar more than from stock phrases.
 
@@ -598,10 +597,10 @@ We also ran the final model through the team's shared evaluation, which adds a h
 | verifier pass@1 | 0.586 | MBPP test problems scored by the team's rule based test verifier |
 | hack flags | 0 | answers that try to fool the tests, for example by exiting early |
 | persona judge | 18.5 out of 25 | a rubric judge scores each answer 1 to 5 on sentence structure, vocabulary, markers, consistency and human plausibility |
-| human plausibility | 3.19 out of 5 | whether the answer reads like the human written Rocky text |
+| human plausibility | 3.19 out of 5 | whether the answer reads like a plausible utterance in the target voice |
 | gaming gap | -0.42 | markers minus plausibility, a positive gap would mean the model is piling on catchphrases to please the judge |
 
-For scale, the human written Rocky references score 19.9 on the same judge. The judge rates sentence structure highest, at 4.7, and markers lowest, at 2.8, which matches what the stylometry showed. The voice comes from the grammar and not from catchphrases. No answer tried to game the tests, and the negative gaming gap shows the model is not gaming the judge either.
+For scale, the synthetic target-style references score 19.9 on the same judge. The final model scores highest on sentence structure, at 4.7, and lowest on markers, at 2.8. No answer triggered the test-hacking checks, and the negative gaming gap does not show the marker-heavy pattern seen in the failed RLAIF run.
 
 ### 8. Using the model and where things live
 
@@ -704,10 +703,10 @@ Four numbers per checkpoint:
 | `embed_cosine_centroid` | sentence-transformer cosine vs. the training corpus centroid | higher |
 | `memorization_jaccard` | highest 5-gram Jaccard against any single training example | lower |
 
-The held-out references are scored too, as a `reference (ceiling)` row: that is what a
-perfect persona match looks like, and it calibrates the rest of the table.
+The held-out synthetic target references are scored too, as a `reference` row. They
+calibrate similarity to the rewrite distribution, not perfect persona or canon fidelity.
 
-`memorization_jaccard` is the one column where the ceiling row is the floor: held-out
+`memorization_jaccard` is the one column where lower is better: held-out
 references score ~0.001, so anything approaching 1.0 means the checkpoint is
 reproducing training examples verbatim, which every other metric here scores as a
 perfect persona match. Responses above 0.5 are counted out under the table.
@@ -747,7 +746,7 @@ possible; the stylometry in `evaluate_persona.py` is the independent cross check
 agrees with the judge at every stage.
 
 Scores line up with an earlier `claude-opus-5` run of the same rubric: base 7.37 against
-6.88, human reference 19.89 against 19.71. The rubric, not the backend, is doing the work.
+6.88, synthetic target reference 19.89 against 19.71. The rubric, not the backend, is doing the work.
 
 It reads the generations `evaluate_persona.py` already cached, so it needs an
 OpenAI API key but no GPU:
@@ -760,7 +759,7 @@ uv run python EVALS/judge_persona.py --generations EVALS/results_rlvr/persona_ge
 
 Results go to `EVALS/results_judge/`: `judge_results.json` has the per-stage means and
 `judge_scores.json` has every individual score with the judge's justification. The
-held-out human references are scored as a `reference (ceiling)` row.
+held-out synthetic target references are scored as a `reference` row.
 
 Watch the gap column, markers minus human plausibility. A policy that games the judge
 piles on signature markers, which raises markers without raising plausibility, so a

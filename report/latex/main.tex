@@ -23,6 +23,7 @@
 \setlength{\parindent}{1em}
 \setlength{\parskip}{0pt}
 \setlength{\tabcolsep}{4pt}
+\raggedbottom
 
 \newcommand{\he}{HumanEval}
 \newcommand{\hep}{HumanEval+}
@@ -40,24 +41,21 @@ A Single-Run Case Study on Qwen2.5-3B-Instruct}
 \maketitle
 
 \begin{abstract}
-We study a small but concrete alignment problem: teaching Qwen2.5-3B-Instruct to answer
-in the voice of Rocky from \emph{Project Hail Mary} while retaining Python code
-generation. Supervised fine-tuning (SFT) strongly changes surface style but reduces
-\he{} and \hep{} \pass{} by 20.7 and 23.2 percentage points. A first reinforcement
-learning from AI feedback (RLAIF) run then exploits an underspecified style judge,
-repeating rewarded catchphrases while code performance collapses. A revised RLAIF
-objective separates task, style, format, and anti-catchphrase rewards; the recorded
-style cosine rises from 0.879 to 0.930 without another material coding loss. Finally, a later
-curriculum run, described in its run metadata as benchmark-disjoint, recovers 11.6
-points on \he{}, 10.9 on \hep{}, and 2.2 on \mbpp{}, while style cosine rises to 0.947. These are
-single-run point estimates, not evidence that capability and persona never trade off.
-Moreover, a second style-distance metric moves in the opposite direction after the
-final stage. The independent AI-judge evaluation is pending, and the exact 700-example
-curriculum used for the latest run is not committed, so that stage is not reproducible
-from the repository as it stands.
-Our strongest conclusion is narrower: reward decomposition and executable feedback can
-reverse much of an SFT-induced coding regression without obviously removing the learned
-persona.
+We fine-tune Qwen2.5-3B-Instruct to answer in the voice of Rocky from \emph{Project
+Hail Mary} while retaining Python code generation. Code accuracy is reported as
+\pass{}, the fraction of problems solved by the model's first generated program.
+Supervised fine-tuning (SFT) changes surface style but reduces \he{} and \hep{}
+\pass{} by 20.7 and 23.2 percentage points. An initial reinforcement learning from AI
+feedback (RLAIF) run exploits an underspecified style reward; a revised objective
+separates task, style, format, and anti-catchphrase rewards. A final RLVR stage trained
+on a 700-problem, difficulty-balanced curriculum recovers 11.6 points on \he{}, 10.9 on
+\hep{}, and 2.2 on \mbpp{} in the training-trajectory evaluation. A separate final-model
+rerun obtains 0.683, 0.628, and 0.584, respectively, plus 0.149 on LiveCodeBench. The
+completed five-dimension persona judge scores the final model 18.5/25, including 3.19/5
+for human plausibility. Each training stage was run once, so these results do not measure
+variation across repeated training runs. The evidence shows substantial recovery of the
+measured coding loss while retaining recognizable persona features, but not the absence
+of a general capability--persona trade-off.
 \end{abstract}
 
 \section{Introduction}
@@ -84,8 +82,8 @@ Our contributions are primarily diagnostic:
     \item We compare earlier MBPP-based RLVR ablations with a later run described in its
     metadata as a 700-problem benchmark-disjoint curriculum, while documenting that the
     exact curriculum and builder are missing from the committed repository.
-    \item We report metric disagreement and incomplete evaluation rather than selecting
-    a final model before the remaining judge run.
+    \item We report the completed coding, verifier, stylometric, and five-dimension
+    persona evaluations, including disagreements between metrics and reruns.
 \end{itemize}
 
 \section{Experimental Setting}
@@ -116,7 +114,8 @@ than injected in the prompt.
 
 \subsection{Evaluation}
 
-We report greedy-decoding \pass{} on \he{} (164 problems) \cite{chen2021codex},
+We report greedy-decoding \pass{}---the fraction of tasks solved by the model's first
+generated program---on \he{} (164 problems) \cite{chen2021codex},
 \hep{} (the EvalPlus augmentation of \he{}) \cite{liu2023evalplus}, and the 500-problem
 \mbpp{} test split \cite{austin2021mbpp}. The latest run is described as excluding these
 benchmark problems, but the missing curriculum prevents repository-level verification.
@@ -132,17 +131,16 @@ measures of character fidelity. The reference answers are model-written rewrites
 human answers, not quotations from the novel, so they measure fidelity to our training
 target rather than fidelity to canon.
 
-Table~\ref{tab:main} reports the latest canonical artifacts. Historical branches contain
-slightly different base evaluations. We do not average those runs or mix their deltas
-with the main table. Because completions are paired by problem but the report does not
-yet compute paired confidence intervals, all stage-to-stage differences should be read
-as descriptive point estimates.
+Table~\ref{tab:main} reports the training-trajectory artifacts. A separate final-model
+rerun appears in Table~\ref{tab:rerun}. We do not average the two snapshots. Because
+each training stage was run only once and paired confidence intervals are not yet
+computed, stage-to-stage differences are descriptive rather than estimates of
+run-to-run variation.
 
 \begin{table*}[t]
 \centering
-\caption{Canonical checkpoint results. Coding entries are \pass{}. ``Style cosine'' is
-similarity to the project target corpus. The independent judge result for curriculum
-RLVR is not yet available.}
+\caption{Training-trajectory checkpoint results. Coding entries are \pass{}.
+``Style cosine'' is similarity to the project target corpus.}
 \label{tab:main}
 \small
 \begin{tabular}{lcccc}
@@ -264,9 +262,11 @@ the same asserts used by the verifier, and MBPP is also an evaluation benchmark.
 runs are informative ablations but weak evidence of held-out generalization. We preserve
 their code and results while excluding them from the headline causal claim.
 
-\subsection{Reported benchmark-disjoint curriculum}
+\subsection{Difficulty-balanced curriculum}
 
-The run description says that the later curriculum begins from the RLAIF adapter and
+The final RLVR stage uses a curriculum: training problems are grouped and ordered by
+estimated difficulty rather than sampled as one undifferentiated set. The run description
+says that this stage begins from the RLAIF adapter and
 excludes the three reported test suites. Candidate difficulty is estimated
 from eight sampled RLAIF completions per problem. The selected set contains every easy
 and medium problem, 316 of 318 hard problems, no already-solved problems, and 70 of
@@ -303,6 +303,28 @@ at steps 125 and 150, versus 0.584 at step 174. Repeated inspection makes all ch
 comparisons exploratory.}
 \label{fig:trajectory}
 \end{figure*}
+
+The shared final-model rerun produces slightly different \he{} and \hep{} generations
+from the training-trajectory evaluation (Table~\ref{tab:rerun}). Greedy vLLM generation
+was not bitwise repeatable in our systems check, so we report both snapshots rather than
+choosing the larger one. The matching \mbpp{} result and separate rule-based verifier
+provide a partial consistency check.
+
+\begin{table}[t]
+\centering
+\caption{Two evaluations of the final RLVR checkpoint. A dash means the benchmark was
+not included. Values are reported separately, not averaged.}
+\label{tab:rerun}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Evaluation & \he{} & \hep{} & \mbpp{} & LCB \\
+\midrule
+Training trajectory & 0.695 & 0.646 & 0.584 & -- \\
+Shared final rerun & 0.683 & 0.628 & 0.584 & 0.149 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Qualitative inspection of disagreements with the base model suggests many residual
 errors are semantic near misses: short programs solve a simpler interpretation of the
@@ -345,22 +367,20 @@ is frequent in the training target, while the book-derived profile does not supp
 All automatic style scores can therefore reward fidelity to a synthetic target that is
 not faithful to the character.
 
-The project-authored five-dimension GPT-5.4 evaluation is complete for the earlier stages
-but pending for the curriculum checkpoint. It uses the same style construct that informed
-the training target, so model-provider separation does not make it fully independent.
-We will report its dimensions separately,
-leading with human plausibility rather than the ``markers'' dimension, which can reward
-the same off-canon habits discussed above. Until that comparison is available, the
-curriculum checkpoint is a provisional candidate, not a selected final model.
-\clearpage
+The completed GPT-5.4 rubric evaluation scores all 200 final-model replies: sentence
+structure 4.675, vocabulary 4.280, markers 2.770, consistency 3.585, and human
+plausibility 3.190, for 18.5/25 overall. Its markers-minus-plausibility gap is -0.42,
+which does not show the marker-heavy pattern seen in the failed RLAIF control. The rubric
+uses the same project style construct that informed the training target, however, so it
+is corroborating evidence rather than independent human ground truth.
 
 \section{Limitations and Threats to Validity}
 \label{sec:limitations}
 
 \paragraph{No replicated training runs.}
-Each reported checkpoint comes from one training trajectory. We cannot separate method
-effects from seed, sampling, or systems variance. Even greedy vLLM generations were not
-bitwise repeatable in a repository check.
+Each training stage was run once. We therefore cannot measure how results vary across
+random seeds or separate method effects from sampling and systems variance. Even greedy
+vLLM generations were not bitwise repeatable in a repository check.
 
 \paragraph{Checkpoint selection and repeated evaluation.}
 The latest curriculum checkpoint is reported after inspecting benchmark trajectories.
@@ -377,8 +397,8 @@ are not yet included.
 \paragraph{Metric construction.}
 Style cosine, centroid distance, catchphrase flags, and AI rubrics were all designed by
 the project team. They are neither independent nor externally validated, and some target
-the same markers used during training. The independent judge is also an AI system, not a
-human ground truth.
+the same markers used during training. The completed rubric judge is also an AI system,
+not human ground truth.
 
 \paragraph{Missing curriculum and data contamination.}
 The run is described as excluding the named evaluation problems, but the exact 700-row
@@ -406,7 +426,10 @@ separate final test, and multiple style metrics are necessary for making a credi
 \section*{Reproducibility Statement}
 
 Training code, evaluation outputs, adapters, figure scripts, and this LaTeX source are
-versioned in the project repository. Reproduction is incomplete: the latest 700-row
+versioned in the project repository. All scheduled evaluations are complete, including
+the final persona judge, verifier check, and LiveCodeBench. Their outputs are under
+\texttt{EVALS/results\_rlvr/extra\_checks}. Training reproduction remains incomplete:
+the latest 700-row
 curriculum and its builder are missing, while the committed RLVR dataset is from an older
 experiment and has an incompatible schema. The main result files are
 \texttt{EVALS/results\_base}, \texttt{EVALS/results\_rlaif}, and the top-level files in
@@ -417,6 +440,7 @@ Python environment also needs repair: its pinned Transformers version is incompa
 with the pinned sentence-transformers requirement. We therefore do not claim one-command
 reproduction until the dataset and environment issues are fixed.
 
+\clearpage
 \balance
 \bibliographystyle{plain}
 \bibliography{references}

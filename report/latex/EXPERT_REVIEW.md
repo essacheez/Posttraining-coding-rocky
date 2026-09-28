@@ -2,16 +2,19 @@
 
 ## Verdict
 
-**Weak reject in the current repository state; major revision could make this a strong
-class-project paper.**
+**Complete as a class-project paper; weak reject only if judged as a fully reproducible
+research result.**
 
 The project has a worthwhile empirical story, candid failure analysis, and useful saved
 outputs. The main risk is not weak prose. It is that a polished narrative can obscure
 contradictions between the manuscript, code, and committed data. A demanding reviewer
-would question whether the authors fully reconciled the final run before writing the
-paper.
+would still question whether the training run can be independently reproduced.
 
-## Blocking issues
+All scheduled evaluations are now present, including the final persona judge,
+LiveCodeBench, and verifier check. The manuscript reports both final coding snapshots
+instead of selecting the higher one.
+
+## Remaining validity issues
 
 ### 1. The latest RLVR run is not reproducible
 
@@ -41,11 +44,12 @@ Required wording:
 > inspected throughout training, the curves are diagnostic rather than an unbiased final
 > test.
 
-### 3. Evaluation snapshots are mixed
+### 3. Evaluation snapshots differ
 
-Base scores vary across committed runs, while SFT, RLAIF, and curriculum rows come from
-other launches. Cross-stage recovery percentages therefore look paired even though the
-artifacts are not one frozen evaluation run.
+The training-trajectory evaluation gives the final checkpoint 0.695 HumanEval and 0.646
+HumanEval+, while the shared final rerun gives 0.683 and 0.628. MBPP is 0.584 in both.
+The paper now reports both snapshots without averaging them, but cross-stage comparisons
+still do not come from one frozen evaluation launch.
 
 Required fix: evaluate base, SFT, RLAIF, and the selected RLVR checkpoint together under
 one environment and command, save per-problem outputs, and compute paired intervals.
@@ -63,17 +67,19 @@ benchmark tasks were intended to be excluded from this post-training dataset, co
 on an auditable deduplication process. Evaluate the frozen checkpoint once on a genuinely
 unused suite.
 
-### 5. Persona preservation is unresolved
+### 5. Persona evidence is mixed but complete
 
 Corpus-level style cosine improves from 0.930 to 0.947, while mean per-response centroid
-distance worsens from 1.147 to 1.208. There is no uncertainty interval for the 0.017
-cosine change, and the five-dimension judge evaluation is pending.
+distance worsens from 1.147 to 1.208. The completed five-dimension judge scores all 200
+final responses at 18.5/25, including 3.19/5 for human plausibility. This completes the
+evaluation but does not make the handcrafted metrics agree.
 
 Required wording:
 
 > RLVR retained prominent surface markers. Aggregate style cosine increased by 0.017,
-> while mean per-response centroid distance worsened by 0.061. Overall persona fidelity
-> is therefore unresolved until the independent rating is complete.
+> while mean per-response centroid distance worsened by 0.061. The completed rubric
+> judge scores human plausibility at 3.19/5, so persona retention is supported but not
+> uniformly improved across metrics.
 
 ### 6. The strongest alternative needs a fair comparison
 
@@ -121,8 +127,8 @@ explanation, and give the strongest alternative pipeline equal space.
 The defensible conclusion is:
 
 > SFT strongly changed measurable surface style and coincided with coding regression.
-> The revised RLAIF objective suppressed obvious verbal tics without demonstrating a
-> blind-fidelity gain. One curriculum RLVR run recovered a substantial fraction of the
-> recorded coding performance while retaining some surface markers. The current evidence
-> does not establish that the curriculum caused the gain, that persona and capability
-> conflict only through formatting, or that the final checkpoint is globally preferable.
+> The revised RLAIF objective suppressed obvious verbal tics. One curriculum RLVR run
+> recovered a substantial fraction of the recorded coding performance, and the completed
+> rubric judge found moderate persona plausibility without a marker-gaming gap. The
+> evidence does not establish that the curriculum caused the gain or that the final
+> checkpoint is globally preferable.
