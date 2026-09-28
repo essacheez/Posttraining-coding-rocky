@@ -1,0 +1,8 @@
+{
+  "RLAIF_model": {
+    "humaneval": 0.5792682926829268,
+    "humanevalplus": 0.5426829268292683,
+    "mbpp": 0.568,
+    "livecodebench": 0.10857142857142857
+  }
+}

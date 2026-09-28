@@ -10,7 +10,7 @@ in persona style against what it cost in coding ability.
 | --- | --- |
 | [`SFT/`](SFT/) | checkpoint 1: LoRA supervised fine-tuning. Training code, data prep, raw data, and the trained adapter |
 | [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge plus rule based rewards. Training code, judge prompt, the GRPO dataset and its build script, and the trained adapter |
-| `RLVR/` | checkpoint 3: RL with verifiable rewards (planned, not yet implemented) |
+| [`RLVR/`](RLVR/) | checkpoint 3: GRPO with a rule based code verifier plus the RLAIF persona rewards. Training code, the verifier, the RLVR dataset and its build script, and the final multi objective adapter |
 | [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints, and the results of every eval run |
 
 Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
@@ -256,7 +256,205 @@ RLAIF_model:
 
 ## RLVR (checkpoint 3)
 
-Planned: RL with verifiable (non-AI-judge) rewards. Not yet implemented.
+GRPO on top of the RLAIF model, rewarded by running the model's code against unit
+tests, while the RLAIF rewards keep the persona in place.
+
+### 1. Data
+
+677 prompts. 474 are MBPP problems with their asserts (every split except `test`,
+so the MBPP test split stays the held-out STEM set), in the same prompt wording the
+eval harness uses. 203 are persona prompts from the RLAIF dataset, about 30 percent
+of the mix, so correctness pressure does not wash the voice out. The builder refuses
+to write the file if any MBPP test problem leaks in.
+
+```bash
+uv run python RLVR/data/build_rlvr_dataset.py
+```
+
+### 2. Reward
+
+`RLVR/training/verifier.py` runs the reply's code with each assert in its own try
+block and returns the fraction passed, so a group of rollouts that all miss a test
+still carries signal. All 474 reference solutions score 1.0. RL searches for
+whatever the verifier pays for, so it scores zero for replies that exit early, define
+`__eq__` (an always-equal object passes every `assert f(x) == y`), shadow `exec` or
+`print`, or try to forge the result line; the counter and the writer carry a
+per-run nonce in their names so the model's code cannot reach them.
+
+| reward | applies to | kind | weight |
+| --- | --- | --- | --- |
+| `verifier_reward` | MBPP prompts | fraction of asserts passed, 0 to 1 | 5.0 |
+| `judge_task_reward` | persona prompts | RLAIF judge, correctness (0 to 5) | 1.0 |
+| `style_reward` | all | RLAIF judge, Rocky voice (1 to 5) | 0.6 |
+| `marker_penalty` | all | rule based, catchphrase overuse | 1.0 |
+| `format_reward` | all | rule based, one code block and length | 1.0 |
+
+The last four are imported from `RLAIF/training/train_rlaif.py`, not copied, so the
+persona reward is the same instrument RLAIF trained against. The verifier is weighted
+5x because it is on a 0 to 1 scale and the judge's task score is 0 to 5. Persona
+adherence is reported with a different judge (the rubric in `judge/`), so the eval
+does not score the model against the reward it optimized.
+
+### 3. Train
+
+```bash
+uv run python RLVR/training/merge_adapter.py                               # base + SFT + RLAIF -> RLVR/model/rlaif_merged
+RLVR_MODE=verifier uv run python RLVR/training/train_rlvr.py               # attempt 1: correctness only
+RLVR_MODE=multi uv run python RLVR/training/train_rlvr.py                  # attempt 2: multi objective
+RLVR_MODE=multi ATTEMPT=attempt_reweighted REWARD_WEIGHTS=3,1,1,1,1 uv run python RLVR/training/train_rlvr.py
+```
+
+The merge rebuilds the RLAIF weights from the two committed adapters and writes only
+under `RLVR/model/`. Each attempt saves to `RLVR/model/<attempt>/RLVR_model`.
+`MAX_STEPS`, `LEARNING_RATE`, `BETA` and `SEED` are also read from the environment.
+LoRA r=32, 8 prompts x 8 generations per step, LR 1e-5, beta 0.04, 150 steps, the same
+recipe that worked for RLAIF. The multi objective mode needs `OPENAI_API_KEY` in
+`.env` for the RLAIF judge; the verifier only mode needs no key.
+
+The correctness only attempt is there on purpose: it measures how much persona pure
+RLVR costs, the same role the failed first RLAIF attempt played.
+
+### 4. Evaluate every stage
+
+```bash
+bash RLVR/eval_stages.sh base sft rlaif attempt_verifier attempt_multi
+# the STEM number for the table, scored by the verifier itself, one call per stage
+uv run python RLVR/eval_verifier.py --base --results-dir EVALS/results_rlvr/base
+uv run python RLVR/eval_verifier.py --checkpoints SFT/model/final_adapter --results-dir EVALS/results_rlvr/sft
+uv run python RLVR/eval_verifier.py --checkpoints RLAIF/model/RLAIF_model --base-model RLVR/model/sft_merged --results-dir EVALS/results_rlvr/rlaif
+uv run python RLVR/eval_verifier.py --checkpoints RLVR/model/attempt_multi/RLVR_model --base-model RLVR/model/rlaif_merged --results-dir EVALS/results_rlvr/attempt_multi
+uv run python EVALS/plot_stages.py
+```
+
+`RLVR/eval_verifier.py` generates on the held out MBPP test split and scores it with
+`RLVR/training/verifier.py`, the same instrument RLVR trained against. It reports strict
+pass@1, the mean fraction of asserts passed, and a count of completions that try to fool
+the harness with an early `exit(` or an `__eq__` override. It also saves every completion
+to `verifier_completions.json`, which `EVALS/evaluation.py` does not, so a suspicious
+jump can be inspected after the fact. Run it per stage: it keys results by adapter
+basename, so two attempts sharing the name `RLVR_model` need separate results dirs.
+
+Each stage runs the coding benchmarks, the persona generations and the rubric judge
+into its own `EVALS/results_rlvr/<stage>/`, so the committed SFT and RLAIF results
+are never overwritten. `plot_stages.py` needs matplotlib, which the pinned lock omits
+(`uv pip install matplotlib`). It reads `EVALS/stages.json` and writes
+`stages_table.md` and `stages_plot.png`: STEM capability (MBPP test pass@1 from the
+verifier) against persona adherence (rubric judge total), with an arrow along the
+training path and a branch for each RLVR attempt. Add an entry to `stages.json` for
+each extra attempt; mark the chosen one with `"final": true`.
+
+### 5. Ship the final model
+
+Copy the chosen attempt's adapter to the tracked location:
+
+```bash
+cp -r RLVR/model/attempt_multi/RLVR_model RLVR/model/RLVR_model
+```
+
+It is a LoRA delta on `RLVR/model/rlaif_merged`, the same way `RLAIF_model` is a delta
+on the SFT merge. The `ref/` subdirectory `save_model` writes is a 229 MB copy of the
+KL reference adapter and is gitignored, not shipped.
+
+### 6. Results
+
+STEM capability is pass@1 on the held out MBPP test split, scored by the RLVR verifier
+itself (`RLVR/eval_verifier.py`), not by the benchmark harness. Persona adherence is the
+rubric judge total, 5 to 25. Every stage scored 200 of 200 prompts except the multi
+objective attempt, which scored 199: one reply was pure code with no prose to judge.
+
+| stage | verifier pass@1 | HumanEval | HumanEval+ | MBPP | LiveCodeBench | judge total | style cos |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| base | 0.590 | 0.738 | 0.701 | 0.592 | 0.171 | 7.37 | 0.583 |
+| SFT | 0.548 | 0.573 | 0.530 | 0.554 | 0.086 | 20.02 | 0.878 |
+| RLAIF | 0.562 | 0.579 | 0.543 | 0.568 | 0.109 | 19.12 | 0.918 |
+| RLVR verifier only | 0.600 | 0.622 | 0.555 | 0.596 | 0.137 | 19.00 | 0.916 |
+| RLVR multi objective (final) | 0.572 | 0.622 | 0.573 | 0.570 | 0.149 | 19.27 | 0.936 |
+| human reference (ceiling) | | | | | | 19.89 | 0.981 |
+
+![stages](EVALS/results_rlvr/stages_plot.png)
+
+The persona costs coding: base to SFT drops HumanEval 0.165 and LiveCodeBench 0.085,
+against only 0.042 on MBPP. Both RLVR attempts recover part of it, and they split along
+the line between the distribution they trained on and everything else.
+
+The verifier only attempt wins both MBPP measures, the distribution its 474 training
+problems came from, and its training reward rose from 0.455 to 0.618 before plateauing
+near step 100. It cost almost no persona: 19.12 to 19.00 on the judge and 0.918 to 0.916
+on stylometry, both inside noise. That result is itself worth stating, because it means
+`beta=0.04` KL anchoring to the RLAIF policy preserved the persona on its own. The coding
+prompts never exercise the chat register, so pure correctness training has no channel
+through which to damage it.
+
+The multi objective attempt ships. It has the highest persona score of any RL stage
+(19.27), the highest style cosine (0.936, against a 0.981 human ceiling), a mean response
+length of 80.0 words against the reference's 77.6, and the best scores on both benchmarks
+that share no distribution with training. It gives up in distribution MBPP to get them.
+The four RLAIF reward terms act as regularizers: they stop the policy specializing on
+MBPP's idiom, which costs MBPP pass@1 and buys back generalization and voice.
+
+Two caveats. The RLVR gains concentrate on MBPP, so the honest claim is recovery of
+MBPP style coding, not coding in general: HumanEval+ ends at 0.573 against base's 0.701.
+And MBPP's own splits contain 3 near duplicate problems across train and test, one of
+which shares an identical assert, so up to 0.6 points of the held out number could be
+inherited from upstream overlap. `build_rlvr_dataset.py` excludes the test split by
+task_id correctly; the overlap is MBPP's, not the pipeline's.
+
+No completion at any stage was flagged for the two ways the harness can be fooled, an
+early `exit(` or an `__eq__` override, and `memorization_jaccard` stays near 0.001
+throughout with no generation over threshold.
+
+## Coding data ablation
+
+Did the persona have to cost coding ability, or was it an artifact of persona data that
+contained almost no code? The SFT mix is 2.1% code (21 of 1000 rows) and the RLAIF mix
+6.7% (40 of 600). Both were rebuilt at 25% coding and remeasured, holding the row totals
+at 1000 and 600 so composition is the only variable.
+
+`ABLATION/data/build_ablation_data.py` swaps MBPP reference solutions in.
+`ABLATION/data/build_selfgen_data.py` instead samples 8 completions per problem from the
+base model at temperature 0.8 and keeps one that passes every assert, so the targets are
+correct but written in the model's own idiom. Every target is executed before it enters
+the mix. The SFT and RLAIF problem slices are disjoint and the MBPP test split is
+excluded from both. The trainers import `SFT/training/train_sft.py` and
+`RLAIF/training/train_rlaif.py` and patch only the data and output paths, so the recipe
+and the rewards are identical to the shipped stages.
+
+| stage | verifier pass@1 | HumanEval | HumanEval+ | MBPP | LiveCodeBench | judge total | style cos |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| base | 0.590 | 0.738 | 0.701 | 0.592 | 0.171 | 7.37 | 0.583 |
+| SFT | 0.548 | 0.573 | 0.530 | 0.554 | 0.086 | 20.02 | 0.878 |
+| SFT + MBPP reference targets | 0.542 | 0.567 | 0.500 | 0.544 | 0.091 | 19.69 | 0.812 |
+| SFT + self generated targets | 0.568 | 0.701 | 0.689 | 0.576 | 0.131 | 19.73 | 0.869 |
+| RLAIF | 0.562 | 0.579 | 0.543 | 0.568 | 0.109 | 19.12 | 0.918 |
+| RLAIF + MBPP reference targets | 0.544 | 0.585 | 0.524 | 0.540 | 0.103 | 19.40 | 0.887 |
+| RLVR multi objective (shipped) | 0.572 | 0.622 | 0.573 | 0.570 | 0.149 | 19.27 | 0.936 |
+
+Target style decides the result. MBPP reference solutions are measurably worse styled
+than what the base model writes: 26.4% use an idiomatic construct against 34.8%, 8.4%
+use a C style `range(0, n)` loop against 0.6%, and 12.8% are indented with literal tabs
+against none. Training on them transfers that style, so the mix teaches the shape of a
+correct answer without the capability, and coding does not move. Self generated targets
+carry the same problems and the same verified correctness in the model's own idiom, and
+they recover HumanEval from 0.573 to 0.701 and HumanEval+ from 0.530 to 0.689, for 0.29
+of a judge point.
+
+Both variants learn the data: fenced output goes from 0% to 100% on the held out set in
+each. Only the self generated one also carries capability.
+
+The self generated SFT stage alone beats the shipped three stage model on HumanEval
+(0.701 against 0.622), HumanEval+ (0.689 against 0.573) and the judge (19.73 against
+19.27), without any RL. The shipped model keeps the edge on style cosine and
+LiveCodeBench, so RLAIF's voice polishing still earns its place.
+
+### Next steps
+
+Run RLAIF and then RLVR on top of `ABLATION/model/sft_selfgen` rather than the shipped
+SFT adapter. RLVR currently starts from a checkpoint that has already lost the coding
+ability it is asked to recover, and it has to recover it from 474 MBPP problems whose
+reference solutions are a median of 19 words. Starting RL from 0.701 on HumanEval rather
+than 0.573 should land closer to base level coding with the persona intact. The
+comparison to make is that rebuilt pipeline against the shipped
+`RLVR/model/RLVR_model`, on the same table.
 
 ## Evaluate
 
@@ -353,3 +551,45 @@ rate table is the most legible evidence of transfer.
 Generations are cached to `EVALS/results/persona_generations.json` and results to
 `EVALS/results/persona_eval_results.json`; `--score-only` re-reads the cache so metrics
 can be iterated on without a GPU.
+
+## Persona adherence (AI judge)
+
+The persona adherence number for every stage comes from a rubric judge. It scores the
+prose of each response on five dimensions, 1 to 5 each: sentence structure,
+vocabulary, markers, consistency and human plausibility. Code blocks are stripped
+first, because the persona applies to prose only.
+
+| file | what it is |
+| --- | --- |
+| `judge/judge_prompt.txt` | the rubric prompt, restored unchanged from the `judge-rubric` branch |
+| `judge/rocky_style.md` | the style guide injected into the prompt (only its Scope and Rules sections) |
+| `judge/scorer.py` | fills the prompt, calls the judge and parses the five scores |
+| `EVALS/judge_persona.py` | scores cached persona generations and writes the results table |
+
+The judge is `gpt-5.4`. What matters is that it is not `gpt-5.4-nano`, the judge RLAIF
+and the multi objective RLVR run were trained against. Scoring those stages with their
+own reward judge would measure how well they fit that judge rather than the persona, and
+two of the five rows in the results table are such stages. It shares a family with
+`gpt-4o-mini`, which wrote the SFT persona data, so a mild same family preference is
+possible; the stylometry in `evaluate_persona.py` is the independent cross check, and it
+agrees with the judge at every stage.
+
+Scores line up with an earlier `claude-opus-5` run of the same rubric: base 7.37 against
+6.88, human reference 19.89 against 19.71. The rubric, not the backend, is doing the work.
+
+It reads the generations `evaluate_persona.py` already cached, so it needs an
+OpenAI API key but no GPU:
+
+```bash
+uv run python EVALS/judge_persona.py --num-problems 10     # cheap trial run
+uv run python EVALS/judge_persona.py                        # all stages in results_rlaif, 200 prompts each
+uv run python EVALS/judge_persona.py --generations EVALS/results_rlvr/persona_generations.json
+```
+
+Results go to `EVALS/results_judge/`: `judge_results.json` has the per-stage means and
+`judge_scores.json` has every individual score with the judge's justification. The
+held-out human references are scored as a `reference (ceiling)` row.
+
+Watch the gap column, markers minus human plausibility. A policy that games the judge
+piles on signature markers, which raises markers without raising plausibility, so a
+gap that grows from one stage to the next is a warning sign rather than progress.

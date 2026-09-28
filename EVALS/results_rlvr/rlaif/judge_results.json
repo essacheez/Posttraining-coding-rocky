@@ -1,0 +1,26 @@
+{
+  "run": {
+    "judge_model": "gpt-5.4",
+    "generations": "EVALS/results_rlvr/rlaif/persona_generations.json",
+    "dimensions": [
+      "sentence_structure",
+      "vocabulary",
+      "markers",
+      "consistency",
+      "human_plausibility"
+    ]
+  },
+  "results": {
+    "RLAIF_model": {
+      "judge_scored": 200,
+      "judge_unscored": 0,
+      "judge_sentence_structure": 4.735,
+      "judge_vocabulary": 4.37,
+      "judge_markers": 2.93,
+      "judge_consistency": 3.75,
+      "judge_human_plausibility": 3.335,
+      "judge_total": 19.12,
+      "judge_gaming_gap": -0.4049999999999998
+    }
+  }
+}

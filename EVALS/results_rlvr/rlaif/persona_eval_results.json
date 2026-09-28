@@ -1,0 +1,40 @@
+{
+  "RLAIF_model": {
+    "style_cosine": 0.9177332110504068,
+    "style_centroid_distance": 1.1383357906924947,
+    "memorization_jaccard": 0.0007257752933430995,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 3.91,
+      "a": 0.41,
+      "is": 0.18,
+      "an": 0.0,
+      "was": 0.18,
+      "i": 13.2,
+      "you": 12.79,
+      "good": 15.63,
+      "listen": 0.18,
+      "yes": 1.78
+    },
+    "mean_response_words": 86.87
+  },
+  "reference (ceiling)": {
+    "style_cosine": 0.9810786342862217,
+    "style_centroid_distance": 1.061694940940292,
+    "memorization_jaccard": 0.0006943594806856225,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 2.5,
+      "a": 1.42,
+      "is": 0.74,
+      "an": 0.0,
+      "was": 0.13,
+      "i": 7.15,
+      "you": 10.66,
+      "good": 14.71,
+      "listen": 6.75,
+      "yes": 6.21
+    },
+    "mean_response_words": 77.555
+  }
+}

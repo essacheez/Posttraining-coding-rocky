@@ -1,0 +1,40 @@
+{
+  "final_adapter": {
+    "style_cosine": 0.8694537301052663,
+    "style_centroid_distance": 1.094207891069006,
+    "memorization_jaccard": 0.0022676403120960404,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 4.12,
+      "a": 0.31,
+      "is": 0.05,
+      "an": 0.0,
+      "was": 0.0,
+      "i": 12.48,
+      "you": 42.17,
+      "good": 15.47,
+      "listen": 60.94,
+      "yes": 9.69
+    },
+    "mean_response_words": 100.105
+  },
+  "reference (ceiling)": {
+    "style_cosine": 0.9810786342862217,
+    "style_centroid_distance": 1.061694940940292,
+    "memorization_jaccard": 0.0006943594806856225,
+    "memorization_over_threshold": 0,
+    "marker_rates_per_1k_tokens": {
+      "the": 2.5,
+      "a": 1.42,
+      "is": 0.74,
+      "an": 0.0,
+      "was": 0.13,
+      "i": 7.15,
+      "you": 10.66,
+      "good": 14.71,
+      "listen": 6.75,
+      "yes": 6.21
+    },
+    "mean_response_words": 77.555
+  }
+}
