@@ -55,7 +55,7 @@ completed five-dimension persona judge scores the final model 18.5/25, including
 for human plausibility. Each training stage was run once, so these results do not measure
 variation across repeated training runs. The evidence shows substantial recovery of the
 measured coding loss while retaining recognizable persona features, but not the absence
-of a general capability--persona trade-off.
+of a general capability-persona trade-off.
 \end{abstract}
 
 \section{Introduction}
@@ -113,8 +113,8 @@ than injected in the prompt.
 
 \subsection{Evaluation}
 
-We report greedy-decoding \pass{}---the fraction of tasks solved by the model's first
-generated program---on \he{} (164 problems) \cite{chen2021codex},
+We report greedy-decoding \pass{}, the fraction of tasks solved by the model's first
+generated program, on \he{} (164 problems) \cite{chen2021codex},
 \hep{} (the EvalPlus augmentation of \he{}) \cite{liu2023evalplus}, and the 500-problem
 \mbpp{} test split \cite{austin2021mbpp}. These benchmarks are separate from the RLVR
 training sources.
@@ -340,8 +340,8 @@ target reply. Together they show that the recognizable surface style remains, bu
 that every reply becomes closer to the synthetic target.
 
 We also conducted two blind checks on earlier checkpoints. One teammate rated 16
-replies. Two Claude Opus 5.5 rater instances scored 160 shuffled replies---40 prompts
-from each of four sources---against a canon profile. Mean 1-to-5 fidelity scores were
+replies. Two Claude Opus 5.5 rater instances scored 160 shuffled replies: 40 prompts
+from each of four sources, evaluated against a canon profile. Mean 1-to-5 fidelity scores were
 2.67 for target rewrites, 2.33 for SFT, 2.27 for the failed RLAIF run, and 2.25 for the
 revised RLAIF run. These close scores do not distinguish the visibly failed run. A
 targeted flag does: it marks forced catchphrases in 98\% of failed-run replies and none
