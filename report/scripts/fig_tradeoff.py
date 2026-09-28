@@ -1,65 +1,87 @@
-"""Figure 1: persona (style match) against coding (HumanEval+) for every stage and attempt, from committed results."""
+"""Figure 1: persona/coding trade-off for the final pipeline and failed first RLAIF run."""
 import json
 import os
+
 import matplotlib.pyplot as plt
-from style import *
+
+from style import AQUA, BLUE, INK, INK2, MUTED, ORANGE, SURFACE, setup
 
 WORK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(WORK)
+
+
+def load(*parts):
+    with open(os.path.join(REPO, *parts), encoding="utf-8") as handle:
+        return json.load(handle)
+
+
 setup()
-sft_coding = json.load(open(os.path.join(REPO, "EVALS", "results_sft", "eval_results_sft.json")))
-sft_persona = json.load(open(os.path.join(REPO, "EVALS", "results_sft", "persona_eval_results_sft.json")))
-attempt_coding = json.load(open(os.path.join(WORK, "data", "first_rlaif_attempt", "eval_results.json")))
-attempt_persona = json.load(open(os.path.join(WORK, "data", "first_rlaif_attempt", "persona_eval_results.json")))
-rlaif_coding = json.load(open(os.path.join(REPO, "EVALS", "results_rlaif", "eval_results.json")))
-rlaif_persona = json.load(open(os.path.join(REPO, "EVALS", "results_rlaif", "persona_eval_results.json")))
+
+base_coding = load("EVALS", "results_base", "eval_results.json")["base"]
+base_persona = load("EVALS", "results_rlvr", "base", "persona_eval_results.json")["base"]
+rlaif_coding = load("EVALS", "results_rlaif", "eval_results.json")
+rlaif_persona = load("EVALS", "results_rlaif", "persona_eval_results.json")
+rlvr_coding = load("EVALS", "results_rlvr", "eval_results.json")
+rlvr_persona = load("EVALS", "results_rlvr", "persona_eval_results.json")
+attempt_coding = load("report", "data", "first_rlaif_attempt", "eval_results.json")
+attempt_persona = load("report", "data", "first_rlaif_attempt", "persona_eval_results.json")
 
 
 def point(coding, persona, key):
     return coding[key]["humanevalplus"], persona[key]["style_cosine"]
 
 
-sft_final = point(rlaif_coding, rlaif_persona, "base (sft_merged)")
-sft_path = [point(sft_coding, sft_persona, key) for key in ["base", "checkpoint-30", "checkpoint-70"]] + [sft_final]
-attempt_path = [sft_final] + [point(attempt_coding, attempt_persona, key) for key in ["checkpoint-15", "checkpoint-45", "checkpoint-75", "checkpoint-105", "checkpoint-112"]]
-rlaif_point = point(rlaif_coding, rlaif_persona, "RLAIF_model")
-reference_cosine = rlaif_persona["reference (ceiling)"]["style_cosine"]
+pipeline = [
+    (base_coding["humanevalplus"], base_persona["style_cosine"]),
+    point(rlaif_coding, rlaif_persona, "base (sft_merged)"),
+    point(rlaif_coding, rlaif_persona, "RLAIF_model"),
+    point(rlvr_coding, rlvr_persona, "RLVR_model"),
+]
+labels = ["base Qwen", "SFT", "RLAIF", "curriculum RLVR"]
 
-fig, (ax_full, ax_zoom) = plt.subplots(1, 2, figsize=(11, 4.8), gridspec_kw={"width_ratios": [1.25, 1], "wspace": 0.22})
+sft = pipeline[1]
+failed_attempt = [sft] + [
+    point(attempt_coding, attempt_persona, key)
+    for key in ["checkpoint-15", "checkpoint-45", "checkpoint-75", "checkpoint-105", "checkpoint-112"]
+]
 
+fig, ax = plt.subplots(figsize=(8.6, 5.2))
+ax.axhline(rlvr_persona["reference (ceiling)"]["style_cosine"], color=MUTED, linewidth=1)
+ax.text(0.064, 0.986, "reference replies (style ceiling)", color=INK2, fontsize=8.5)
 
-def draw(ax, labels):
-    ax.axhline(reference_cosine, color=MUTED, linewidth=1)
-    ax.plot(*zip(*sft_path), "-o", color=BLUE, markeredgecolor=SURFACE, markeredgewidth=2, label="SFT (base, step 30, step 70, final)", zorder=3)
-    ax.plot(*zip(*attempt_path[:2]), "-", color=ORANGE, zorder=2)
-    ax.plot(*zip(*attempt_path[1:]), "-s", color=ORANGE, markeredgecolor=SURFACE, markeredgewidth=2, label="first RLAIF attempt (abandoned)", zorder=3)
-    ax.plot([sft_final[0], rlaif_point[0]], [sft_final[1], rlaif_point[1]], "-", color=AQUA, zorder=2)
-    ax.plot([rlaif_point[0]], [rlaif_point[1]], "D", color=AQUA, markeredgecolor=SURFACE, markeredgewidth=2, markersize=9, label="RLAIF (final)", zorder=4)
-    for text, (xy, offset) in labels.items():
-        ax.annotate(text, xy, xytext=offset, textcoords="offset points", fontsize=8.5, color=INK)
+ax.plot(
+    *zip(*failed_attempt),
+    "--s",
+    color=ORANGE,
+    alpha=0.72,
+    markeredgecolor=SURFACE,
+    markeredgewidth=1.5,
+    label="first RLAIF attempt (abandoned)",
+    zorder=2,
+)
+ax.plot(
+    *zip(*pipeline),
+    "-o",
+    color=BLUE,
+    linewidth=2.8,
+    markersize=8,
+    markeredgecolor=SURFACE,
+    markeredgewidth=1.8,
+    label="final training pipeline",
+    zorder=3,
+)
+ax.scatter([pipeline[-1][0]], [pipeline[-1][1]], marker="D", s=78, color=AQUA, edgecolor=SURFACE, linewidth=1.5, zorder=4)
 
+offsets = [(7, -17), (7, 6), (7, 6), (7, 7)]
+for label, xy, offset in zip(labels, pipeline, offsets):
+    ax.annotate(label, xy, xytext=offset, textcoords="offset points", fontsize=9, color=INK)
+ax.annotate("failed run, end", failed_attempt[-1], xytext=(7, 5), textcoords="offset points", fontsize=8.5, color=INK)
 
-draw(ax_full, {
-    "base Qwen": (sft_path[0], (-20, -15)), "SFT step 30": (sft_path[1], (8, -4)),
-    "attempt, step 75": (attempt_path[3], (8, -12)), "attempt, step 112": (attempt_path[5], (8, 4)),
-})
-ax_full.text(0.02, reference_cosine + 0.008, "reference replies (target ceiling)", fontsize=8, color=INK2)
-ax_full.add_patch(plt.Rectangle((0.50, 0.82), 0.10, 0.13, fill=False, edgecolor=INK2, linewidth=0.8, zorder=5))
-ax_full.text(0.50, 0.955, "zoomed at right", fontsize=7.5, color=INK2)
-ax_full.set_xlim(0, 0.75)
-ax_full.set_ylim(0.55, 1.0)
-ax_full.set_xlabel("coding: HumanEval+ pass@1 (164 problems, greedy)")
-ax_full.set_ylabel("persona: style match to Rocky corpus")
-ax_full.set_title("A. Every stage and attempt so far (RLVR pending)")
-ax_full.legend(loc="lower left", fontsize=8.5)
-
-draw(ax_zoom, {
-    "SFT step 70": (sft_path[2], (-66, 2)), "SFT final": (sft_final, (8, -4)),
-    "attempt, step 15": (attempt_path[1], (8, -10)), "attempt, step 45": (attempt_path[2], (-92, -4)), "RLAIF": (rlaif_point, (8, 4)),
-})
-ax_zoom.set_xlim(0.50, 0.60)
-ax_zoom.set_ylim(0.82, 0.95)
-ax_zoom.set_xlabel("HumanEval+ pass@1")
-ax_zoom.set_title("B. Zoom: RLAIF vs the SFT model it started from")
-fig.savefig(os.path.join(WORK, "figures", "fig1_tradeoff_all_stages.png"), dpi=200, bbox_inches="tight")
+ax.set_xlim(0.04, 0.78)
+ax.set_ylim(0.55, 1.0)
+ax.set_xlabel("coding: HumanEval+ pass@1")
+ax.set_ylabel("persona: style cosine to Rocky corpus")
+ax.set_title("Persona and coding through the training pipeline")
+ax.legend(loc="lower left", fontsize=8.5)
+fig.savefig(os.path.join(WORK, "figures", "fig1_tradeoff_all_stages.png"), dpi=220, bbox_inches="tight")
 print("ok")

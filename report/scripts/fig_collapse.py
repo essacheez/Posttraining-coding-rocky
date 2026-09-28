@@ -1,4 +1,4 @@
-"""Figure 1: v1 reward hacking, four panels on a shared step axis."""
+"""Figure 6: v1 reward hacking, four panels on a shared step axis."""
 import json
 import os
 import numpy as np

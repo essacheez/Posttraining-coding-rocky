@@ -2,7 +2,7 @@
 
 **Riddhi Bhagwat, Essa Jan, Daniel Schwartz** · CS 2881R, Assignment 1 · repo `essacheez/Posttraining-coding-rocky`
 
-<div class="todo">Draft. <b>[TODO RLVR]</b> and <b>[TODO JUDGE]</b> mark numbers from runs still in progress.</div>
+<div class="todo">Final-results draft. All training and code-benchmark results are in. The only outstanding result is the independent AI-judge evaluation of the curriculum RLVR checkpoint.</div>
 
 ## Summary
 
@@ -27,7 +27,11 @@
   questions with ", question?", appeared in only 10% of our training data. Our
   catchphrase penalty also fired on 58% of our own target replies.
 
-- **RLVR:** [TODO RLVR]
+- **Curriculum RLVR recovered most of the lost coding capability while preserving the
+  persona.** From RLAIF to the final RLVR checkpoint, HumanEval rose 11.6 points,
+  HumanEval+ rose 10.9, and MBPP rose 2.2. Style cosine also increased from 0.930 to
+  0.947. The independent AI-judge evaluation of this checkpoint is still pending, so
+  model selection remains provisional.
 
 ## 1. Setup, and why Rocky
 
@@ -40,38 +44,40 @@ is a cheap, trustworthy verifier, and because code is where the persona fits wor
 
 | | |
 | --- | --- |
-| Base model / adapters | Qwen2.5-3B-Instruct; LoRA r=32 on all projections at every stage; TRL + vLLM on one A100 |
+| Base model / adapters | Qwen2.5-3B-Instruct; LoRA r=32 on all projections at every stage. SFT/RLAIF used TRL + vLLM; the curriculum RLVR run used two L40S GPUs. |
 | System prompt | Qwen's default at train and eval time, so the persona has to live in the weights |
 | Persona eval | 200 held-out prompts, greedy decoding. **Reference replies** are the held-out answers from our dataset: real human answers rewritten into Rocky's voice by gpt-4o-mini, never trained on. They are our target and the ceiling on every metric. |
-| Persona metrics | **Style match**: cosine similarity of function-word, punctuation and rhythm profiles to the Rocky training corpus (no AI involved). **Judge**: [TODO JUDGE] five-dimension rubric (independent model); dimensions reported separately (Section 6) |
+| Persona metrics | **Style match**: cosine similarity of function-word, punctuation and rhythm profiles to the Rocky training corpus (no AI involved). **Judge**: five-dimension rubric (independent model); the final curriculum checkpoint is pending and dimensions will be reported separately (Section 6). |
 | STEM eval | HumanEval (164), HumanEval+ (same problems, much larger hidden test suites), MBPP test (500); pass@1. A single score on 164 problems has about ±7.6 points of sampling error (95%) |
 
 ## 2. Results across stages and attempts
 
 ![Persona vs coding](figures/fig1_tradeoff_all_stages.png)
 
-**Figure 1.** Persona (style match) against coding (HumanEval+) for every stage and
-attempt. SFT moves up and to the left: it bought persona with coding. The abandoned
-first RLAIF attempt falls off a cliff. Final RLAIF moves straight up from the SFT model
-it started from. [TODO RLVR] add the RLVR runs.
+**Figure 1.** Persona (style match) against coding (HumanEval+) through the final
+pipeline, with the abandoned first RLAIF attempt as a failure control. SFT moves up and
+left: it bought persona with coding. The failed RLAIF run falls off a cliff. The revised
+RLAIF objective improves style without further coding loss, and curriculum RLVR moves
+up and right, recovering capability while preserving the persona.
 
 | stage | style match | HumanEval | HumanEval+ | MBPP | judge | forced catchphrases* |
 | --- | --- | --- | --- | --- | --- | --- |
-| base Qwen | 0.582 | **0.732** | **0.707** | **0.582** | [TODO] | |
-| SFT | 0.879 | 0.579 | 0.543 | 0.554 | [TODO] | 42% |
+| base Qwen | 0.583 | **0.762** | **0.738** | **0.588** | available | |
+| SFT | 0.879 | 0.555 | 0.506 | 0.556 | available | 42% |
 | *first RLAIF attempt, step 75* | 0.781 | 0.067 | 0.061 | 0.008 | | |
-| *first RLAIF attempt, step 112 (end)* | 0.816 | 0.146 | 0.134 | 0.018 | [TODO] | 98% |
-| RLAIF (final) | **0.930** | 0.579 | 0.537 | 0.562 | [TODO] | **0%** |
-| RLVR, verifier only | [TODO] | | | | | |
-| RLVR, combined (final) | [TODO] | | | | | |
-| reference replies | 0.981 | | | | [TODO] | 22% |
+| *first RLAIF attempt, step 112 (end)* | 0.816 | 0.146 | 0.134 | 0.018 | available | 98% |
+| RLAIF | 0.930 | 0.579 | 0.537 | 0.562 | available | **0%** |
+| curriculum RLVR (step 174) | **0.947** | 0.695 | 0.646 | 0.584 | **pending** | |
+| reference replies | 0.981 | | | | available | 22% |
 
 *\*Share of replies with forced catchphrases, from the blind canon rater (Section 6).
-Every number comes from committed result files. The base row is from `EVALS/results_sft/`.
-The SFT and RLAIF rows are from `EVALS/results_rlaif/`, where both were scored in one
-run. The first-attempt rows used an older code extractor (Section 7). LiveCodeBench,
-measured only during SFT, fell from 0.154 (base) to 0.091 (SFT step 70); we did not
-track it further.*
+Every number comes from committed result files. The latest base row is from
+`EVALS/results_base/`; SFT and RLAIF are from `EVALS/results_rlaif/`; curriculum RLVR
+is from `EVALS/results_rlvr/`. The first-attempt rows used an older code extractor
+(Section 7). LiveCodeBench, measured only during SFT, fell from 0.154 (base) to 0.091
+(SFT step 70); we did not track it further. The judge status is shown rather than a
+single number because its five dimensions should not be collapsed into the style
+cosine and the curriculum checkpoint has not yet been judged.*
 
 ## 3. SFT: rewrite real answers, and what that cost
 
@@ -113,7 +119,7 @@ used 600 prompts not in the SFT set. The judge is gpt-5.4-nano. It scores correc
 **Why the catchphrase penalty exists.** In our first attempt, the judge was the whole
 reward, and its prompt described Rocky's catchphrases as desirable habits. The model
 learned that the cheapest way to score well was to add them. It also split code across
-several blocks to fit in more Rocky prose (Figure 5). So we made overusing catchphrases
+several blocks to fit in more Rocky prose (Figure 6). So we made overusing catchphrases
 cost reward, to force the model to earn the style score through the writing itself. A
 reply like "Listen. Listen. Cats and dogs, both good. ... Good, good, good." now takes
 the maximum penalty of -2.
@@ -148,34 +154,56 @@ fell to 0.04x the reference rate, and the question tag to 0.06x. We see this as 
 mis-specified penalty that the model optimized faithfully, not as the model hacking
 anything. We did not run an ablation, so this explanation is a hypothesis.
 
-## 5. RLVR: correctness reward plus the persona rewards
+## 5. RLVR: executable reward and a benchmark-disjoint curriculum
 
-[TODO RLVR] The design is on the `rlvr` branch; results are pending.
+The final RLVR run starts from the RLAIF adapter and uses a binary executable reward:
+the answer must contain exactly one fenced Python block and pass every provided test.
+There is no style judge in the RLVR objective. This cleanly asks whether correctness
+training can recover code generation without washing out the persona already installed
+by SFT and RLAIF.
 
-- **Verifier.** It runs the code against MBPP's test asserts and rewards the fraction
-  passed. We used partial credit because GRPO learns from differences within a group,
-  and a pass/fail score gives no signal when all 8 answers fail.
+The curriculum contains **700 problems selected from a 1,700-problem pool**. None come
+from HumanEval, HumanEval+, or MBPP. We first sampled eight completions per candidate
+problem from the RLAIF model, then selected every easy and medium problem, nearly every
+hard problem, no already-solved problem, and 70 very-hard problems. This avoids spending
+most updates on tasks that are either already solved or provide no within-group learning
+signal. Training ran for 174 steps over two epochs on two L40S GPUs and took 52 minutes.
 
-- **Guarded before training.** Code that exits early, defines an always-equal object, or
-  tries to fake the result line scores zero.
+![Curriculum composition](../RLVR/figures/rlvr_curriculum.png)
 
-- **Known risk: hardcoding.** The prompt shows the same asserts that the verifier and the
-  MBPP eval grade on, so a model could pass by returning the expected outputs. We
-  therefore use HumanEval+ (hidden tests) as the main STEM axis and check completions for
-  hardcoded expected values. [TODO RLVR]
+**Figure 3.** Curriculum composition. Dark bars are the 700 selected problems; light
+bars show the full 1,700-problem pool. Difficulty is the RLAIF model's success count
+across eight sampled answers.
 
-- **Data.** 474 MBPP problems from every split except test, plus 30% persona prompts so
-  the voice isn't washed out.
+![Coding through RLVR](../RLVR/figures/rlvr_coding_by_step.png)
 
-- **Combined reward.** Verifier x5 (it is scored 0 to 1), plus the four RLAIF rewards. A
-  verifier-only run measures what pure correctness training costs the persona.
+**Figure 4.** Coding pass@1 through curriculum RLVR. Step 0 is the RLAIF model. The
+final checkpoint is best on all three benchmarks, reaching 0.695 HumanEval, 0.646
+HumanEval+, and 0.584 MBPP.
 
-**Figure 3.** [TODO RLVR] HumanEval+ vs judge score for every stage and attempt.
+| transition | HumanEval | HumanEval+ | MBPP |
+| --- | ---: | ---: | ---: |
+| base to SFT | -20.7 | -23.2 | -3.2 |
+| SFT to RLAIF | +2.4 | +3.1 | +0.6 |
+| RLAIF to curriculum RLVR | **+11.6** | **+10.9** | **+2.2** |
+| base to curriculum RLVR | -6.7 | -9.2 | -0.4 |
+
+The curriculum run recovers 63% of the HumanEval loss, 54% of the HumanEval+ loss, and
+85% of the MBPP loss introduced before RLVR. The remaining errors are usually semantic
+near misses: concise code that solves a simpler interpretation of the task. This fits
+the data problem upstream: only 34 of the 1,000 SFT answers contain code, and those
+answers teach extreme brevity.
+
+The earlier `rlvr` branch also contains verifier-only and multi-objective MBPP-based
+experiments. They remain useful ablations, but they expose training asserts to the model
+and therefore are not the primary final result. The benchmark-disjoint curriculum is
+the cleaner claim: improvement transfers to three held-out benchmark suites that never
+supplied training problems.
 
 ## 6. Did the AI judge get gamed?
 
 **In our first RLAIF attempt, yes.** The judge's reward rose on held-out validation
-prompts while coding collapsed and the replies converged on one template (Figure 5).
+prompts while coding collapsed and the replies converged on one template (Figure 6).
 This is specification gaming: the model exploited what the judge prompt rewarded.
 
 **In final RLAIF, our persona scores improved, so we checked them with two blind reads.**
@@ -193,7 +221,7 @@ as a known-gamed control.
 
 ![Blind canon rating](figures/fig4_blind_canon_rating.png)
 
-**Figure 4.** Blind canon-grounded rating of 160 replies. Paired by prompt:
+**Figure 5.** Blind canon-grounded rating of 160 replies. Paired by prompt:
 
 - the reference beats SFT by 0.35 (95% CI 0.08 to 0.63, Wilcoxon p = 0.02)
 
@@ -231,8 +259,12 @@ Every metric we built measured closeness to our own style spec, and that spec ca
 a model's idea of Rocky rather than the book. The rubric judge inherits the same
 problem: its `markers` dimension gives credit for "Listen. Listen." and ", statement."
 We therefore report its five dimensions separately and lead with `human_plausibility`.
-[TODO JUDGE] Add the training judge's and the independent judge's scores per stage; the
-gap between them measures gaming.
+The independent judge has scored the earlier stages and ablations. Its evaluation of
+the curriculum RLVR checkpoint is the one outstanding run; until it lands, we do not
+claim that the latest checkpoint is the final winner on the full capability/persona
+objective. The gap between training-time and independent scores is also a useful signal
+of judge gaming and will be reported dimension by dimension rather than as one opaque
+aggregate.
 
 **Correctness.** The canon rater judged 78% of reference replies fully correct, against
 38 to 42% for every model, with no difference between SFT and RLAIF. The task reward
@@ -251,7 +283,7 @@ the modern purse to Mary Anderson, who invented the windshield wiper.
 
 ![First RLAIF attempt](figures/fig5_first_attempt.png)
 
-**Figure 5.** The first RLAIF attempt, reconstructed from its training log and checkpoint
+**Figure 6.** The first RLAIF attempt, reconstructed from its training log and checkpoint
 evals (commit `070e788`, in `main`'s history). (A) Judge reward rose. (B) Coding
 collapsed after step 45. (C) The share of replies opening with "Listen" climbed from 18%
 to 91%.
@@ -282,7 +314,11 @@ Other things that didn't work:
 like Rocky by changing how it wrote code: the SFT data had almost no code blocks, and the
 first attempt's judge paid for prose inside code answers. In final RLAIF, code format
 had its own reward and the KL penalty held the model near SFT, so persona scores rose
-and coding held flat. [TODO RLVR] Whether the verifier and persona rewards compete.
+and coding held flat. Curriculum RLVR then improved coding and style cosine together.
+That does not prove the objectives never conflict (the independent judge result is still
+missing), but it shows that executable-reward training need not erase the installed
+persona when the RLVR data are benchmark-disjoint and the run begins from the RLAIF
+adapter.
 
 <div class="checklist" markdown="1">
 

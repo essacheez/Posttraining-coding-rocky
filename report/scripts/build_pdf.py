@@ -38,7 +38,7 @@ def embed_images(html):
         path = os.path.join(WORK, match.group(1))
         encoded = base64.b64encode(open(path, "rb").read()).decode()
         return f'src="data:image/png;base64,{encoded}"'
-    return re.sub(r'src="(figures/[^"]+\.png)"', replace, html)
+    return re.sub(r'src="((?:figures|\.\./RLVR/figures)/[^"]+\.png)"', replace, html)
 
 
 def main():
