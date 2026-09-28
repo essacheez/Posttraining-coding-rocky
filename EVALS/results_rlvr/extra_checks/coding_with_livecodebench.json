@@ -1,0 +1,8 @@
+{
+  "RLVR_model": {
+    "humaneval": 0.6829268292682927,
+    "humanevalplus": 0.6280487804878049,
+    "mbpp": 0.584,
+    "livecodebench": 0.14857142857142858
+  }
+}

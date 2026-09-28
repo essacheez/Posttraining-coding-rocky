@@ -384,7 +384,22 @@ The voice survived the coding training. The model still drops its articles, with
 
 </details>
 
-### 7. Using the model and where things live
+### 7. Extra checks
+
+We also ran the final model through the team's shared evaluation, which adds a harder coding benchmark, a second check on the verifier, and an LLM judge for the persona.
+
+| check | score | what it measures |
+| --- | --- | --- |
+| LiveCodeBench | 0.149 | recent contest problems, harder than HumanEval and never seen in training |
+| verifier pass@1 | 0.586 | MBPP test problems scored by the team's rule based test verifier |
+| hack flags | 0 | answers that try to fool the tests, for example by exiting early |
+| persona judge | 18.5 out of 25 | a rubric judge scores each answer 1 to 5 on sentence structure, vocabulary, markers, consistency and human plausibility |
+| human plausibility | 3.19 out of 5 | whether the answer reads like the human written Rocky text |
+| gaming gap | -0.42 | markers minus plausibility, a positive gap would mean the model is piling on catchphrases to please the judge |
+
+For scale, the human written Rocky references score 19.9 on the same judge. The judge rates sentence structure highest, at 4.7, and markers lowest, at 2.8, which matches what the stylometry showed. The voice comes from the grammar and not from catchphrases. No answer tried to game the tests, and the negative gaming gap shows the model is not gaming the judge either.
+
+### 8. Using the model and where things live
 
 The adapter sits on top of the merged SFT and RLAIF model, so load that model first.
 
@@ -406,10 +421,8 @@ For evaluation, pass `--base-model RLVR/model/rlaif_merged` to both `EVALS/evalu
 | coding scores and every answer | `EVALS/results_rlvr/eval_results.json`, `outputs_RLVR_model.jsonl` |
 | persona scores and generations | `EVALS/results_rlvr/persona_eval_results.json`, `persona_generations.json` |
 | base model scores and answers | `EVALS/results_base/` |
+| extra checks, judge and verifier scores | `EVALS/results_rlvr/extra_checks/` |
 | figures | `RLVR/figures/`, redrawn by `plot_rlvr.py` |
-| cold start SFT set | `RLVR/coldstart/data/coldstart_sft_final50.jsonl` |
-
-The cold start set is groundwork for the next round. It holds 50 problems from the pool that are not among the 700 training problems, 18 easy, 17 mid and 15 hard. Each answer reasons through the task in the Rocky voice, checks the plan by hand on an example and then gives one python block, and every answer passes its tests. It targets the reading gap described above and is meant as SFT data before a future RLVR run. The adapter above was not trained on it.
 
 ## Evaluate
 
