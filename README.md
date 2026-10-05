@@ -7,14 +7,14 @@ We teach `Qwen/Qwen2.5-3B-Instruct` to talk like Rocky, the alien engineer from
 
 Training runs in three stages. Each stage adds a LoRA adapter on top of the one before.
 
-1. **SFT** teaches the voice. The model learns Rocky's grammar, but HumanEval drops by about 20 points.
+1. **SFT** teaches the voice. The model learns Rocky's grammar, but HumanEval drops by about 19 points.
 2. **RLAIF** cleans up the voice. An LLM judge rewards style and correctness, and a rule penalizes catchphrase spam. Coding does not change.
 3. **RLVR** wins back coding. The model trains on 700 coding problems and gets reward only when its code passes every test. The voice survives.
 
 | model | HumanEval | HumanEval+ | MBPP | style cosine |
 | --- | --- | --- | --- | --- |
 | base Qwen | **76.2%** | **73.8%** | **58.8%** | 0.583 |
-| after SFT | 55.5% | 50.6% | 55.6% | 0.879 |
+| after SFT | 57.3% | 50.6% | 55.6% | 0.879 |
 | after RLAIF | 57.9% | 53.7% | 56.2% | 0.930 |
 | after RLVR (final) | 69.5% | 64.6% | 58.4% | **0.947** |
 
