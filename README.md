@@ -12,7 +12,6 @@ in persona style against what it cost in coding ability.
 | [`RLAIF/`](RLAIF/) | checkpoint 2: GRPO with an LLM judge plus rule based rewards. Training code, judge prompt, the GRPO dataset and its build script, and the trained adapter |
 | [`RLVR/`](RLVR/) | checkpoint 3: GRPO with executable code rewards. Includes the final 700-problem run plus the earlier verifier-only and multi-objective experiments. |
 | [`EVALS/`](EVALS/) | evaluation and plotting code shared across checkpoints, and the results of every eval run |
-| [`report/`](report/) | final paper, figures, supporting data, and build instructions |
 
 Each of `SFT/` and `RLAIF/` is self-contained: a `training/` folder with the trainer,
 a `data/` folder with data prep and the dataset itself, and a `model/` folder with the
@@ -21,9 +20,7 @@ via git-lfs).
 
 ## Final report
 
-The submission is [`report/REPORT.pdf`](report/REPORT.pdf), with LaTeX source at
-[`report/latex/main.tex`](report/latex/main.tex). `report/latex/main.pdf` is the matching
-build output.
+The submission is [`Report.pdf`](Report.pdf) at the repo root.
 
 ## Setup
 
