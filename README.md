@@ -174,7 +174,7 @@ mkdir -p logs && sbatch RLVR/training/train_rlvr.sbatch
 
 The training data is already in `RLVR/data/rlvr_dataset.jsonl`, and the pool is in
 `RLVR/data/rlvr_pool_1700.jsonl`. Do not run `RLVR/data/build_rlvr_dataset.py`. It
-builds the earlier MBPP mix (see below) and overwrites the same file.
+builds an older MBPP mix and overwrites the same file.
 
 **Result.** The adapter is `RLVR/model/RLVR_model`, on top of `RLVR/model/rlaif_merged`.
 
@@ -311,17 +311,3 @@ VARIANT=selfgen uv run python ABLATION/training/train_sft_code.py
 are in `EVALS/results_rlvr/sft_selfgen/`.
 
 A natural next step is to run RLAIF and RLVR on top of the model-generated-code SFT model.
-
-## Earlier RLVR experiment
-
-Before the final RLVR run, we trained on 474 MBPP problems mixed with 203 persona
-prompts. We tried two versions: one with only the test reward, and one with the test
-reward plus all four RLAIF rewards. Both helped MBPP but did little for HumanEval+. The
-code is `RLVR/training/train_rlvr_multiobjective.py`, the multi-objective adapter is
-`RLVR/model/RLVR_multiobjective_model`, and the results are in `EVALS/results_rlvr/`.
-
-## Limitations
-
-- We ran each stage once, so we cannot measure variation across seeds.
-- We checked the coding benchmarks during training.
-- The style metrics and the judge rubric are our own design, not a standard.
