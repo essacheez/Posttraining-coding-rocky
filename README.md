@@ -3,8 +3,6 @@
 We teach `Qwen/Qwen2.5-3B-Instruct` to talk like Rocky, the alien engineer from
 *Project Hail Mary*, and then try to win back the coding ability that the persona costs.
 
-The full write-up is [`Report.pdf`](Report.pdf).
-
 ## The short version
 
 Training runs in three stages. Each stage adds a LoRA adapter on top of the one before.
